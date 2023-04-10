@@ -1,15 +1,10 @@
 package org.apache.flink.connector.janusgraph.internal.executor;
 
-import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnection;
-import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnectionProvider;
 import org.apache.flink.connector.janusgraph.internal.converter.JanusGraphRowConverter;
 import org.apache.flink.connector.janusgraph.options.JanusGraphOptions;
 import org.apache.flink.table.data.RowData;
 
 import org.apache.tinkerpop.gremlin.structure.T;
-import org.janusgraph.core.JanusGraphTransaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,17 +16,11 @@ import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYW
 /** JanusGraph vertex executor. */
 public class JanusGraphVertexExecutor extends JanusGraphExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JanusGraphVertexExecutor.class);
-
     private static final Map<String, Object> RESERVED_FIELDS;
 
     private final String[] fieldNames;
 
     private final JanusGraphRowConverter converter;
-
-    private transient JanusGraphConnection connection;
-
-    private transient JanusGraphTransaction transaction;
 
     static {
         Map<String, Object> reservedKeywordMap = new HashMap<>();
@@ -45,12 +34,6 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
         this.fieldNames = fieldNames;
         this.converter = converter;
         this.maxRetries = options.getMaxRetries();
-    }
-
-    @Override
-    public void prepareBatch(JanusGraphConnectionProvider connectionProvider) {
-        this.connection = connectionProvider.getOrCreateConnection();
-        this.transaction = connection.newTransaction();
     }
 
     @Override
@@ -81,35 +64,5 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
             keyValuePairs[pos + 1] = values[i];
         }
         return keyValuePairs;
-    }
-
-    @Override
-    public void executeBatch() {
-        transaction.commit();
-        transaction = connection.newTransaction();
-    }
-
-    @Override
-    public void close() {
-        if (transaction != null && transaction.isOpen()) {
-            try {
-                transaction.commit();
-            } catch (Exception e) {
-                LOG.warn("JanusGraph transaction could not be closed.", e);
-            } finally {
-                transaction.close();
-            }
-        }
-
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (Exception e) {
-                LOG.warn("JanusGraph connection could not be closed.", e);
-            }
-        }
-
-        transaction = null;
-        connection = null;
     }
 }

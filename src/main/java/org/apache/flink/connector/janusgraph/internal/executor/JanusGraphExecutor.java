@@ -2,6 +2,7 @@ package org.apache.flink.connector.janusgraph.internal.executor;
 
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.connector.janusgraph.config.TableType;
+import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnection;
 import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnectionProvider;
 import org.apache.flink.connector.janusgraph.internal.converter.JanusGraphRowConverter;
 import org.apache.flink.connector.janusgraph.internal.helper.VertexByIdSearcher;
@@ -14,8 +15,8 @@ import org.apache.flink.table.types.logical.LogicalTypeRoot;
 import org.apache.flink.table.types.logical.RowType;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.janusgraph.core.JanusGraphTransaction;
 
-import java.io.IOException;
 import java.io.Serializable;
 
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_FROM_V_ID;
@@ -31,18 +32,43 @@ public abstract class JanusGraphExecutor implements Serializable {
 
     protected int maxRetries;
 
+    protected transient JanusGraphConnection connection;
+
+    protected transient JanusGraphTransaction transaction;
+
     public void setRuntimeContext(RuntimeContext context) {
         this.runtimeContext = context;
     }
 
-    public abstract void prepareBatch(JanusGraphConnectionProvider connectionProvider)
-            throws IOException;
+    public void prepareBatch(JanusGraphConnectionProvider connectionProvider) {
+        this.connection = connectionProvider.getOrCreateConnection();
+        this.transaction = connection.newTransaction();
+    }
 
     public abstract void addToBatch(RowData rowData) throws Exception;
 
-    public abstract void executeBatch() throws Exception;
+    public void executeBatch() {
+        transaction.commit();
+        transaction.close();
+        transaction = connection.newTransaction();
+    }
 
-    public abstract void close();
+    public void close() {
+        if (transaction != null && transaction.isOpen()) {
+            try {
+                transaction.commit();
+            } finally {
+                transaction.close();
+            }
+        }
+
+        if (connection != null) {
+            connection.close();
+        }
+
+        transaction = null;
+        connection = null;
+    }
 
     public static JanusGraphExecutor createExecutor(
             String[] fieldNames, LogicalType[] fieldTypes, JanusGraphOptions options) {

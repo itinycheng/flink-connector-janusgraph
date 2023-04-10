@@ -56,8 +56,8 @@ public class JanusGraphOutputFormat<T> extends AbstractJanusGraphOutputFormat<T>
     public void open(int taskNumber, int numTasks) throws IOException {
         try {
             executor = JanusGraphExecutor.createExecutor(fieldNames, fieldTypes, options);
-            executor.prepareBatch(connectionProvider);
             executor.setRuntimeContext(getRuntimeContext());
+            executor.prepareBatch(connectionProvider);
 
             long flushIntervalMillis = options.getFlushInterval().toMillis();
             scheduledFlush(flushIntervalMillis, "janusgraph-output-format");
@@ -90,6 +90,7 @@ public class JanusGraphOutputFormat<T> extends AbstractJanusGraphOutputFormat<T>
         for (int i = 0; i <= maxRetries; i++) {
             try {
                 executor.executeBatch();
+                batchCount = 0;
                 return;
             } catch (Exception e) {
                 LOG.error("JanusGraph commitBatch error, retry times = {}", i, e);

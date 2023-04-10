@@ -7,7 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /** Connection Provider. */
 public class JanusGraphConnectionProvider implements Serializable {
@@ -34,12 +36,14 @@ public class JanusGraphConnectionProvider implements Serializable {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configProperties.forEach((k, v) -> configuration.addProperty(k.toString(), v));
         configuration.addProperty("gremlin.graph", options.getFactory());
-        configuration.addProperty("storage.hostname", options.getHosts());
+        configuration.addProperty(
+                "storage.hostname",
+                Arrays.stream(options.getHosts().split(",")).collect(Collectors.toList()));
         configuration.addProperty("storage.port", options.getPort());
         configuration.addProperty("storage.backend", options.getBackendType().name);
         configuration.addProperty("storage.username", options.getUsername());
         configuration.addProperty("storage.password", options.getPassword());
-        configuration.addProperty("graph.graphname", options.getTableName());
+        configuration.addProperty("storage.hbase.table", options.getTableName());
         this.connection = new JanusGraphConnection(configuration);
         return this.connection;
     }

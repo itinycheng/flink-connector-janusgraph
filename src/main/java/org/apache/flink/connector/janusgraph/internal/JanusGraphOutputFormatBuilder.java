@@ -12,6 +12,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.function.Function;
 
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_FROM_V_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
@@ -73,7 +74,7 @@ public class JanusGraphOutputFormatBuilder implements Serializable {
                 primaryKeys,
                 fieldNames,
                 logicalTypes,
-                rowData -> rowData,
+                (Function<RowData, RowData> & Serializable) rowData -> rowData,
                 options);
     }
 

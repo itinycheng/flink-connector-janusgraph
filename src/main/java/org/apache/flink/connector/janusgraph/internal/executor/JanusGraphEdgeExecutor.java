@@ -1,7 +1,5 @@
 package org.apache.flink.connector.janusgraph.internal.executor;
 
-import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnection;
-import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnectionProvider;
 import org.apache.flink.connector.janusgraph.internal.converter.JanusGraphRowConverter;
 import org.apache.flink.connector.janusgraph.internal.helper.VertexObjectSearcher;
 import org.apache.flink.connector.janusgraph.options.JanusGraphOptions;
@@ -9,7 +7,6 @@ import org.apache.flink.table.data.RowData;
 
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.janusgraph.core.JanusGraphTransaction;
 
 import javax.annotation.Nonnull;
 
@@ -34,10 +31,6 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
 
     private final List<Integer> internalColumnIndexes;
 
-    private transient JanusGraphConnection connection;
-
-    private transient JanusGraphTransaction transaction;
-
     public JanusGraphEdgeExecutor(
             @Nonnull String[] fieldNames,
             @Nonnull Integer labelIndex,
@@ -58,12 +51,6 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
                         labelIndex,
                         fromVertexSearcher.getVertexColumnIndex(),
                         toVertexSearcher.getVertexColumnIndex());
-    }
-
-    @Override
-    public void prepareBatch(JanusGraphConnectionProvider connectionProvider) {
-        this.connection = connectionProvider.getOrCreateConnection();
-        this.transaction = connection.newTransaction();
     }
 
     @Override
@@ -90,25 +77,5 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
                                 "Unknown row kind, the supported row kinds is: INSERT, UPDATE_BEFORE, UPDATE_AFTER, DELETE, but get: %s.",
                                 record.getRowKind()));
         }
-    }
-
-    @Override
-    public void executeBatch() {
-        transaction.commit();
-        transaction = connection.newTransaction();
-    }
-
-    @Override
-    public synchronized void close() {
-        if (transaction != null) {
-            transaction.close();
-        }
-
-        if (connection != null) {
-            connection.close();
-        }
-
-        transaction = null;
-        connection = null;
     }
 }

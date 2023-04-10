@@ -65,8 +65,6 @@ public class JanusGraphDynamicTableSink implements DynamicTableSink {
                                 DataType.getFieldDataTypes(physicalRowDataType)
                                         .toArray(new DataType[0]))
                         .setPrimaryKeys(primaryKeys)
-                        .setRowDataTypeInformation(
-                                context.createTypeInformation(physicalRowDataType))
                         .build();
 
         return SinkFunctionProvider.of(

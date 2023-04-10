@@ -3,46 +3,61 @@ package org.apache.flink.connector.janusgraph.internal.executor;
 import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnection;
 import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnectionProvider;
 import org.apache.flink.connector.janusgraph.internal.converter.JanusGraphRowConverter;
+import org.apache.flink.connector.janusgraph.internal.helper.VertexObjectSearcher;
 import org.apache.flink.connector.janusgraph.options.JanusGraphOptions;
 import org.apache.flink.table.data.RowData;
 
-import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraphTransaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.Nonnull;
 
-import static java.util.Collections.unmodifiableMap;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.apache.flink.util.Preconditions.checkArgument;
+import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** JanusGraph edge executor. */
 public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JanusGraphEdgeExecutor.class);
-
-    private static final Map<String, Object> RESERVED_FIELDS;
-
     private final String[] fieldNames;
 
+    private final int labelIndex;
+
+    private final VertexObjectSearcher fromVertexSearcher;
+
+    private final VertexObjectSearcher toVertexSearcher;
+
     private final JanusGraphRowConverter converter;
+
+    private final List<Integer> internalColumnIndexes;
 
     private transient JanusGraphConnection connection;
 
     private transient JanusGraphTransaction transaction;
 
-    static {
-        Map<String, Object> reservedKeywordMap = new HashMap<>();
-        reservedKeywordMap.put("id", T.id);
-        reservedKeywordMap.put("label", T.label);
-        RESERVED_FIELDS = unmodifiableMap(reservedKeywordMap);
-    }
-
     public JanusGraphEdgeExecutor(
-            String[] fieldNames, JanusGraphRowConverter converter, JanusGraphOptions options) {
-        this.fieldNames = fieldNames;
-        this.converter = converter;
-        this.maxRetries = options.getMaxRetries();
+            @Nonnull String[] fieldNames,
+            @Nonnull Integer labelIndex,
+            @Nonnull VertexObjectSearcher fromVertexSearcher,
+            @Nonnull VertexObjectSearcher toVertexSearcher,
+            @Nonnull JanusGraphRowConverter converter,
+            @Nonnull JanusGraphOptions options) {
+        checkArgument(labelIndex >= 0);
+
+        this.labelIndex = labelIndex;
+        this.fieldNames = checkNotNull(fieldNames);
+        this.fromVertexSearcher = checkNotNull(fromVertexSearcher);
+        this.toVertexSearcher = checkNotNull(toVertexSearcher);
+        this.converter = checkNotNull(converter);
+        this.maxRetries = checkNotNull(options.getMaxRetries());
+        this.internalColumnIndexes =
+                Arrays.asList(
+                        labelIndex,
+                        fromVertexSearcher.getVertexColumnIndex(),
+                        toVertexSearcher.getVertexColumnIndex());
     }
 
     @Override
@@ -55,8 +70,15 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
     public void addToBatch(RowData record) {
         switch (record.getRowKind()) {
             case INSERT:
-                Object[] keyValuePairs = mergeWithFieldNames(converter.toExternal(record));
-                transaction.addVertex(keyValuePairs);
+                Object[] values = converter.toExternal(record);
+                Vertex fromV = fromVertexSearcher.search(values, transaction);
+                Vertex toV = toVertexSearcher.search(values, transaction);
+                Edge edge = fromV.addEdge(values[labelIndex].toString(), toV);
+                for (int i = 0; i < values.length; i++) {
+                    if (!internalColumnIndexes.contains(i)) {
+                        edge.property(fieldNames[i], values[i]);
+                    }
+                }
                 break;
             case UPDATE_AFTER:
             case DELETE:
@@ -68,17 +90,6 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
                                 "Unknown row kind, the supported row kinds is: INSERT, UPDATE_BEFORE, UPDATE_AFTER, DELETE, but get: %s.",
                                 record.getRowKind()));
         }
-    }
-
-    private Object[] mergeWithFieldNames(Object[] values) {
-        Object[] keyValuePairs = new Object[values.length * 2];
-        for (int i = 0; i < values.length; i++) {
-            int pos = i * 2;
-            String fieldName = fieldNames[i];
-            keyValuePairs[pos] = RESERVED_FIELDS.getOrDefault(fieldName, fieldName);
-            keyValuePairs[pos + 1] = values[i];
-        }
-        return keyValuePairs;
     }
 
     @Override

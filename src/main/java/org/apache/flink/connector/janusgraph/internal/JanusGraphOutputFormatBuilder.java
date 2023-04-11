@@ -97,7 +97,7 @@ public class JanusGraphOutputFormatBuilder implements Serializable {
                     || !ArrayUtils.contains(fieldNames, KEYWORD_TO_V_ID)) {
                 throw new RuntimeException(
                         String.format(
-                                "Vertex table must contains columns of %s, %s and %s",
+                                "Edge table must contains columns of %s, %s and %s",
                                 KEYWORD_LABEL, KEYWORD_FROM_V_ID, KEYWORD_TO_V_ID));
             }
         } else {

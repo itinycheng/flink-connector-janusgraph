@@ -1,6 +1,6 @@
 package org.apache.flink.connector.janusgraph.config;
 
-/** clickhouse config properties. */
+/** JanusGraph config properties. */
 public class JanusGraphConfig {
 
     public static final String IDENTIFIER = "janusgraph";

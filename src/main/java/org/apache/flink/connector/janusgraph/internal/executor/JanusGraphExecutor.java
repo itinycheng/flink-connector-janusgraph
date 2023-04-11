@@ -25,7 +25,7 @@ import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYW
 import static org.apache.flink.connector.janusgraph.config.TableType.EDGE;
 import static org.apache.flink.connector.janusgraph.config.TableType.VERTEX;
 
-/** Executor interface for submitting data to ClickHouse. */
+/** Executor interface for submitting data to JanusGraph. */
 public abstract class JanusGraphExecutor implements Serializable {
 
     protected RuntimeContext runtimeContext;

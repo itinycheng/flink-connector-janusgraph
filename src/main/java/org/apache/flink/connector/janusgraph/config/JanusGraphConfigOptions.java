@@ -6,60 +6,63 @@ import org.apache.flink.table.factories.FactoryUtil;
 
 import java.time.Duration;
 
-/** clickhouse config options. */
+/** JanusGraph config options. */
 public class JanusGraphConfigOptions {
 
     public static final ConfigOption<String> FACTORY =
             ConfigOptions.key(JanusGraphConfig.FACTORY)
                     .stringType()
                     .defaultValue("org.janusgraph.core.JanusGraphFactory")
-                    .withDescription("The ClickHouse url in format `clickhouse://<host>:<port>`.");
+                    .withDescription(
+                            "The Factory for creating a JanusGraph instance, equal to JanusGraph config `gremlin.graph`.");
 
     public static final ConfigOption<String> HOSTS =
             ConfigOptions.key(JanusGraphConfig.HOSTS)
                     .stringType()
                     .noDefaultValue()
                     .withDescription(
-                            "Directly read/write local tables in case of distributed table engine.");
+                            "A comma-separated list of storage backend servers, equal to JanusGraph config `storage.hostname`.");
 
     public static final ConfigOption<Integer> PORT =
             ConfigOptions.key(JanusGraphConfig.PORT)
                     .intType()
                     .noDefaultValue()
                     .withDescription(
-                            "Convert a record of type UPDATE_AFTER to update/insert statement or just discard it, available: update, insert, discard."
-                                    + " Additional: `table.exec.sink.upsert-materialize`, `org.apache.flink.table.runtime.operators.sink.SinkUpsertMaterializer`");
+                            "The port on which to connect to storage backend servers, equal to JanusGraph config `storage.port`.");
 
     public static final ConfigOption<BackendType> BACKEND_TYPE =
             ConfigOptions.key(JanusGraphConfig.BACKEND_TYPE)
                     .enumType(BackendType.class)
                     .noDefaultValue()
-                    .withDescription(
-                            "Sharding strategy, available: balanced, hash, shuffle, value.");
+                    .withDescription("Type of storage backend, currently only supports `hbase`.");
 
     public static final ConfigOption<String> USERNAME =
             ConfigOptions.key(JanusGraphConfig.USERNAME)
                     .stringType()
                     .noDefaultValue()
-                    .withDescription("The ClickHouse username.");
+                    .withDescription(
+                            "Username to authenticate against storage backend, equal to JanusGraph config `storage.username`");
 
     public static final ConfigOption<String> PASSWORD =
             ConfigOptions.key(JanusGraphConfig.PASSWORD)
                     .stringType()
                     .noDefaultValue()
-                    .withDescription("The ClickHouse password.");
+                    .withDescription(
+                            "Password to authenticate against storage backend, equal to JanusGraph config `storage.password`.");
 
     public static final ConfigOption<String> TABLE_NAME =
             ConfigOptions.key(JanusGraphConfig.TABLE_NAME)
                     .stringType()
                     .noDefaultValue()
-                    .withDescription("The ClickHouse table name.");
+                    .withDescription(
+                            "The JanusGraph table name, currently equal to JanusGraph config `storage.hbase.table`."
+                                    + " TODO: Need to adopt to different storage backends.");
 
     public static final ConfigOption<TableType> TABLE_TYPE =
             ConfigOptions.key(JanusGraphConfig.TABLE_TYPE)
                     .enumType(TableType.class)
                     .noDefaultValue()
-                    .withDescription("The ClickHouse database name. Default to `default`.");
+                    .withDescription("The type of current table, available: vertex, edge.");
 
     public static final ConfigOption<Integer> SINK_PARALLELISM = FactoryUtil.SINK_PARALLELISM;
 
@@ -81,5 +84,6 @@ public class JanusGraphConfigOptions {
             ConfigOptions.key(JanusGraphConfig.SINK_MAX_RETRIES)
                     .intType()
                     .defaultValue(3)
-                    .withDescription("The max retry times if writing records to database failed.");
+                    .withDescription(
+                            "The max retry times if writing records to JanusGraph failed.");
 }

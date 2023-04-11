@@ -27,7 +27,7 @@ public abstract class AbstractJanusGraphOutputFormat<T> extends RichOutputFormat
 
     protected transient ScheduledFuture<?> scheduledFuture;
 
-    private transient volatile Exception flushException;
+    protected transient volatile Exception executionException;
 
     @Override
     public void configure(Configuration parameters) {}
@@ -59,7 +59,7 @@ public abstract class AbstractJanusGraphOutputFormat<T> extends RichOutputFormat
                                     try {
                                         flush();
                                     } catch (Exception e) {
-                                        flushException = e;
+                                        executionException = e;
                                     }
                                 }
                             }
@@ -73,9 +73,9 @@ public abstract class AbstractJanusGraphOutputFormat<T> extends RichOutputFormat
         return serializer == null ? record : serializer.copy(record);
     }
 
-    protected void checkFlushException() {
-        if (flushException != null) {
-            throw new RuntimeException("Writing records to JanusGraph failed.", flushException);
+    protected void checkExecutionException() {
+        if (executionException != null) {
+            throw new RuntimeException("Writing records to JanusGraph failed.", executionException);
         }
     }
 }

@@ -56,7 +56,7 @@ public abstract class JanusGraphExecutor implements Serializable {
     public void close() {
         if (transaction != null && transaction.isOpen()) {
             try {
-                transaction.commit();
+                transaction.rollback();
             } finally {
                 transaction.close();
             }

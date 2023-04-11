@@ -68,7 +68,7 @@ public class JanusGraphOutputFormat<T> extends AbstractJanusGraphOutputFormat<T>
 
     @Override
     public synchronized void writeRecord(T record) throws IOException {
-        checkFlushException();
+        checkExecutionException();
 
         try {
             T recordCopy = copyIfNecessary(record);
@@ -79,13 +79,14 @@ public class JanusGraphOutputFormat<T> extends AbstractJanusGraphOutputFormat<T>
                 flush();
             }
         } catch (Exception e) {
+            executionException = e;
             throw new IOException("Writing records to JanusGraph failed.", e);
         }
     }
 
     @Override
     public synchronized void flush() throws IOException {
-        checkFlushException();
+        checkExecutionException();
         int maxRetries = options.getMaxRetries();
         for (int i = 0; i <= maxRetries; i++) {
             try {
@@ -141,6 +142,6 @@ public class JanusGraphOutputFormat<T> extends AbstractJanusGraphOutputFormat<T>
             LOG.warn("Close JanusGraph connection failed.", e);
         }
 
-        checkFlushException();
+        checkExecutionException();
     }
 }

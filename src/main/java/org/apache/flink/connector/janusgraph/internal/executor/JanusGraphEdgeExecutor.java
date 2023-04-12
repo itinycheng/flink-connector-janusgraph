@@ -1,7 +1,7 @@
 package org.apache.flink.connector.janusgraph.internal.executor;
 
 import org.apache.flink.connector.janusgraph.internal.converter.JanusGraphRowConverter;
-import org.apache.flink.connector.janusgraph.internal.helper.VertexObjectSearcher;
+import org.apache.flink.connector.janusgraph.internal.helper.ElementObjectSearcher;
 import org.apache.flink.connector.janusgraph.options.JanusGraphOptions;
 import org.apache.flink.table.data.RowData;
 
@@ -23,52 +23,59 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
 
     private final int labelIndex;
 
-    private final VertexObjectSearcher fromVertexSearcher;
+    private final ElementObjectSearcher<Edge> edgeSearcher;
 
-    private final VertexObjectSearcher toVertexSearcher;
+    private final ElementObjectSearcher<Vertex> inVertexSearcher;
+
+    private final ElementObjectSearcher<Vertex> outVertexSearcher;
 
     private final JanusGraphRowConverter converter;
 
-    private final List<Integer> internalColumnIndexes;
+    private final List<Integer> reservedFieldIndexes;
 
     public JanusGraphEdgeExecutor(
             @Nonnull String[] fieldNames,
             @Nonnull Integer labelIndex,
-            @Nonnull VertexObjectSearcher fromVertexSearcher,
-            @Nonnull VertexObjectSearcher toVertexSearcher,
+            @Nonnull ElementObjectSearcher<Edge> edgeSearcher,
+            @Nonnull ElementObjectSearcher<Vertex> inVertexSearcher,
+            @Nonnull ElementObjectSearcher<Vertex> outVertexSearcher,
             @Nonnull JanusGraphRowConverter converter,
             @Nonnull JanusGraphOptions options) {
-        checkArgument(labelIndex >= 0);
+        super(options);
 
+        checkArgument(labelIndex >= 0);
         this.labelIndex = labelIndex;
         this.fieldNames = checkNotNull(fieldNames);
-        this.fromVertexSearcher = checkNotNull(fromVertexSearcher);
-        this.toVertexSearcher = checkNotNull(toVertexSearcher);
+        this.edgeSearcher = checkNotNull(edgeSearcher);
+        this.inVertexSearcher = checkNotNull(inVertexSearcher);
+        this.outVertexSearcher = checkNotNull(outVertexSearcher);
         this.converter = checkNotNull(converter);
         this.maxRetries = checkNotNull(options.getMaxRetries());
-        this.internalColumnIndexes =
+        this.reservedFieldIndexes =
                 Arrays.asList(
                         labelIndex,
-                        fromVertexSearcher.getVertexColumnIndex(),
-                        toVertexSearcher.getVertexColumnIndex());
+                        edgeSearcher.getColumnIndex(),
+                        inVertexSearcher.getColumnIndex(),
+                        outVertexSearcher.getColumnIndex());
     }
 
     @Override
     public void addToBatch(RowData record) {
+        Object[] values = converter.toExternal(record);
         switch (record.getRowKind()) {
             case INSERT:
-                Object[] values = converter.toExternal(record);
-                Vertex fromV = fromVertexSearcher.search(values, transaction);
-                Vertex toV = toVertexSearcher.search(values, transaction);
-                Edge edge = fromV.addEdge(values[labelIndex].toString(), toV);
-                for (int i = 0; i < values.length; i++) {
-                    if (!internalColumnIndexes.contains(i)) {
-                        edge.property(fieldNames[i], values[i]);
-                    }
-                }
+                Vertex inV = inVertexSearcher.search(values, transaction);
+                Vertex outV = outVertexSearcher.search(values, transaction);
+                Edge created = inV.addEdge(values[labelIndex].toString(), outV);
+                setExcludingReservedFields(created, values);
                 break;
             case UPDATE_AFTER:
+                Edge searched = edgeSearcher.search(values, transaction);
+                setExcludingReservedFields(searched, values);
+                break;
             case DELETE:
+                edgeSearcher.search(values, transaction).remove();
+                break;
             case UPDATE_BEFORE:
                 break;
             default:
@@ -76,6 +83,14 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
                         String.format(
                                 "Unknown row kind, the supported row kinds is: INSERT, UPDATE_BEFORE, UPDATE_AFTER, DELETE, but get: %s.",
                                 record.getRowKind()));
+        }
+    }
+
+    private void setExcludingReservedFields(Edge edge, Object[] values) {
+        for (int i = 0; i < values.length; i++) {
+            if (!reservedFieldIndexes.contains(i)) {
+                edge.property(fieldNames[i], values[i]);
+            }
         }
     }
 }

@@ -9,28 +9,25 @@ import org.janusgraph.core.JanusGraphTransaction;
 import javax.annotation.Nonnull;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
-import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** Search vertex by id. */
-public class VertexByIdSearcher extends VertexObjectSearcher {
+public class VertexByIdSearcher implements ElementObjectSearcher<Vertex> {
 
-    private final String vertexColumnName;
+    private final int vertexColumnIndex;
 
-    private final LogicalType vertexColumnType;
-
-    public VertexByIdSearcher(
-            @Nonnull String vertexColumnName,
-            @Nonnull LogicalType vertexColumnType,
-            int vertexColumnIndex) {
-        super(vertexColumnIndex);
+    public VertexByIdSearcher(int vertexColumnIndex, @Nonnull LogicalType vertexColumnType) {
         checkArgument(LogicalTypeRoot.BIGINT.equals(vertexColumnType.getTypeRoot()));
-
-        this.vertexColumnName = checkNotNull(vertexColumnName);
-        this.vertexColumnType = checkNotNull(vertexColumnType);
+        checkArgument(vertexColumnIndex >= 0);
+        this.vertexColumnIndex = vertexColumnIndex;
     }
 
     @Override
-    public Vertex search(Object vertexInfo, JanusGraphTransaction transaction) {
-        return transaction.traversal().V(vertexInfo).next();
+    public Vertex search(Object[] rowData, JanusGraphTransaction transaction) {
+        return transaction.traversal().V(rowData[vertexColumnIndex]).next();
+    }
+
+    @Override
+    public int getColumnIndex() {
+        return vertexColumnIndex;
     }
 }

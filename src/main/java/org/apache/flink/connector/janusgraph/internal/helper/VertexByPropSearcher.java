@@ -10,46 +10,47 @@ import org.janusgraph.core.JanusGraphTransaction;
 import javax.annotation.Nonnull;
 
 import java.util.Map;
-import java.util.Objects;
 
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** Searche vertex by properties. */
-public class VertexByPropSearcher extends VertexObjectSearcher {
+public class VertexByPropSearcher implements ElementObjectSearcher<Vertex> {
 
-    private final String vertexColumnName;
-    private final LogicalType vertexColumnType;
+    private final int vertexColumnIndex;
+
+    private final int labelIndex;
 
     public VertexByPropSearcher(
-            @Nonnull String vertexColumnName,
-            @Nonnull LogicalType vertexColumnType,
-            int vertexColumnIndex) {
-        super(vertexColumnIndex);
+            @Nonnull LogicalType vertexColumnType, int vertexColumnIndex, int labelIndex) {
         checkArgument(LogicalTypeRoot.MAP.equals(vertexColumnType.getTypeRoot()));
         checkArgument(
                 LogicalTypeRoot.VARCHAR.equals(
                         vertexColumnType.getChildren().get(0).getTypeRoot()));
-
-        this.vertexColumnName = checkNotNull(vertexColumnName);
-        this.vertexColumnType = checkNotNull(vertexColumnType);
+        this.vertexColumnIndex = vertexColumnIndex;
+        this.labelIndex = checkNotNull(labelIndex);
     }
 
     @Override
-    public Vertex search(Object vertexInfo, JanusGraphTransaction transaction) {
-        Map<String, Object> vertexPropMap = (Map<String, Object>) vertexInfo;
+    public Vertex search(Object[] rowData, JanusGraphTransaction transaction) {
+        Map<String, Object> vertexPropMap = (Map<String, Object>) rowData[vertexColumnIndex];
+        GraphTraversal<Vertex, Vertex> traversal =
+                transaction.traversal().V().hasLabel(rowData[labelIndex].toString());
 
-        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V();
-        Object label = vertexPropMap.get(KEYWORD_LABEL);
-        if (label != null) {
-            traversal.hasLabel(label.toString());
+        for (Map.Entry<String, Object> entry : vertexPropMap.entrySet()) {
+            final String key = entry.getKey();
+            final Object value = entry.getValue();
+            if (!KEYWORD_LABEL.equals(key) && value != null) {
+                traversal = traversal.has(key, value);
+            }
         }
 
-        vertexPropMap.entrySet().stream()
-                .filter(entry -> !Objects.equals(entry.getKey(), KEYWORD_LABEL))
-                .filter(entry -> entry.getValue() != null)
-                .forEach(entry -> traversal.has(entry.getKey(), entry.getValue()));
         return traversal.next();
+    }
+
+    @Override
+    public int getColumnIndex() {
+        return vertexColumnIndex;
     }
 }

@@ -13,7 +13,6 @@ import java.util.Map;
 
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
 import static org.apache.flink.util.Preconditions.checkArgument;
-import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** Searche vertex by properties. */
 public class VertexByPropSearcher implements ElementObjectSearcher<Vertex> {
@@ -28,8 +27,11 @@ public class VertexByPropSearcher implements ElementObjectSearcher<Vertex> {
         checkArgument(
                 LogicalTypeRoot.VARCHAR.equals(
                         vertexColumnType.getChildren().get(0).getTypeRoot()));
+        checkArgument(vertexColumnIndex >= 0);
+        checkArgument(labelIndex >= 0);
+
         this.vertexColumnIndex = vertexColumnIndex;
-        this.labelIndex = checkNotNull(labelIndex);
+        this.labelIndex = labelIndex;
     }
 
     @Override

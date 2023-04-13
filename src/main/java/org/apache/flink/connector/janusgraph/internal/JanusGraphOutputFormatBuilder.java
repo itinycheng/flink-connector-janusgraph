@@ -14,9 +14,8 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.function.Function;
 
-import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_IN_V;
+import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_E_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
-import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_OUT_V;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_V_ID;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -80,7 +79,7 @@ public class JanusGraphOutputFormatBuilder implements Serializable {
 
     /**
      * Vertices must have columns of v_id, label.<br>
-     * Edges must have columns of in_v, out_id, label.
+     * Edges must have columns of e_id, label.
      */
     private void validateInternalColumns() {
         if (TableType.VERTEX.equals(options.getTableType())) {
@@ -93,12 +92,11 @@ public class JanusGraphOutputFormatBuilder implements Serializable {
             }
         } else if (TableType.EDGE.equals(options.getTableType())) {
             if (!ArrayUtils.contains(fieldNames, KEYWORD_LABEL)
-                    || !ArrayUtils.contains(fieldNames, KEYWORD_IN_V)
-                    || !ArrayUtils.contains(fieldNames, KEYWORD_OUT_V)) {
+                    || !ArrayUtils.contains(fieldNames, KEYWORD_E_ID)) {
                 throw new RuntimeException(
                         String.format(
-                                "Edge table must contains columns of %s, %s and %s",
-                                KEYWORD_LABEL, KEYWORD_IN_V, KEYWORD_OUT_V));
+                                "Edge table must contains columns of %s and %s",
+                                KEYWORD_LABEL, KEYWORD_E_ID));
             }
         } else {
             throw new RuntimeException("Unknown table type: " + options.getTableType());

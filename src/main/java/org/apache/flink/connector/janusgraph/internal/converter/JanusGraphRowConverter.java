@@ -84,9 +84,12 @@ public class JanusGraphRowConverter implements Serializable {
                         JanusGraphConverterUtil.toExternal(val.getArray(index), type);
             case MAP:
                 return (val, index) -> JanusGraphConverterUtil.toExternal(val.getMap(index), type);
+            case ROW:
+                return (val, index) ->
+                        JanusGraphConverterUtil.toExternal(
+                                val.getRow(index, ((RowType) type).getFieldCount()), type);
             case DECIMAL:
             case MULTISET:
-            case ROW:
             case RAW:
             default:
                 throw new UnsupportedOperationException("Unsupported type:" + type);

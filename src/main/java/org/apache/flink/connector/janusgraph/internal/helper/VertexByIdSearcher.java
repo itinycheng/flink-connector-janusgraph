@@ -13,21 +13,22 @@ import static org.apache.flink.util.Preconditions.checkArgument;
 /** Search vertex by id. */
 public class VertexByIdSearcher implements ElementObjectSearcher<Vertex> {
 
-    private final int vertexColumnIndex;
+    private final int vertexIdIndex;
 
-    public VertexByIdSearcher(int vertexColumnIndex, @Nonnull LogicalType vertexColumnType) {
-        checkArgument(LogicalTypeRoot.BIGINT.equals(vertexColumnType.getTypeRoot()));
-        checkArgument(vertexColumnIndex >= 0);
-        this.vertexColumnIndex = vertexColumnIndex;
+    public VertexByIdSearcher(int vertexIdIndex, @Nonnull LogicalType vertexIdType) {
+        checkArgument(LogicalTypeRoot.BIGINT.equals(vertexIdType.getTypeRoot()));
+        checkArgument(vertexIdIndex >= 0);
+        this.vertexIdIndex = vertexIdIndex;
     }
 
+    @Nonnull
     @Override
     public Vertex search(Object[] rowData, JanusGraphTransaction transaction) {
-        return transaction.traversal().V(rowData[vertexColumnIndex]).next();
+        return transaction.traversal().V(rowData[vertexIdIndex]).next();
     }
 
     @Override
     public int getColumnIndex() {
-        return vertexColumnIndex;
+        return vertexIdIndex;
     }
 }

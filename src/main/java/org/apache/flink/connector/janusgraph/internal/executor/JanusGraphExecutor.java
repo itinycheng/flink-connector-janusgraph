@@ -120,13 +120,9 @@ public abstract class JanusGraphExecutor implements Serializable {
             String[] fieldNames, LogicalType[] fieldTypes, String edgeColumn) {
         int edgeColumnIndex = ArrayUtils.indexOf(fieldNames, edgeColumn);
         LogicalType edgeColumnType = fieldTypes[edgeColumnIndex];
-        if (edgeColumnType.isNullable()) {
-            throw new RuntimeException("Vertex searcher cannot accept an nullable data");
-        }
-
         if (LogicalTypeRoot.BIGINT.equals(edgeColumnType.getTypeRoot())) {
             return new EdgeByIdSearcher(edgeColumnType, edgeColumnIndex);
-        } else if (LogicalTypeRoot.MAP.equals(edgeColumnType.getTypeRoot())) {
+        } else if (LogicalTypeRoot.ROW.equals(edgeColumnType.getTypeRoot())) {
             return new EdgeByPropSearcher(
                     edgeColumnType,
                     edgeColumnIndex,
@@ -142,15 +138,10 @@ public abstract class JanusGraphExecutor implements Serializable {
             String[] fieldNames, LogicalType[] fieldTypes, String vertexColumn) {
         int vertexColumnIndex = ArrayUtils.indexOf(fieldNames, vertexColumn);
         LogicalType vertexColumnType = fieldTypes[vertexColumnIndex];
-        if (vertexColumnType.isNullable()) {
-            throw new RuntimeException("Vertex searcher cannot accept an nullable data");
-        }
-
         if (LogicalTypeRoot.BIGINT.equals(vertexColumnType.getTypeRoot())) {
             return new VertexByIdSearcher(vertexColumnIndex, vertexColumnType);
-        } else if (LogicalTypeRoot.MAP.equals(vertexColumnType.getTypeRoot())) {
-            int labelIndex = ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL);
-            return new VertexByPropSearcher(vertexColumnType, vertexColumnIndex, labelIndex);
+        } else if (LogicalTypeRoot.ROW.equals(vertexColumnType.getTypeRoot())) {
+            return new VertexByPropSearcher(vertexColumnIndex, vertexColumnType);
         } else {
             throw new RuntimeException("Vertex searcher only support Longs and Maps");
         }

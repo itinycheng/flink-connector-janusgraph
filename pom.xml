@@ -147,6 +147,7 @@
 								<excludes>
 									<!-- These jars must exist on the server side -->
 									<exclude>junit:*</exclude>
+									<exclude>org.mockito:*</exclude>
 									<exclude>log4j:*</exclude>
 									<exclude>org.apache.logging.log4j:*</exclude>
 									<exclude>ch.qos.logback:*</exclude>

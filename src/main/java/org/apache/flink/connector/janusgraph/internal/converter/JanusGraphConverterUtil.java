@@ -2,15 +2,18 @@ package org.apache.flink.connector.janusgraph.internal.converter;
 
 import org.apache.flink.table.data.ArrayData;
 import org.apache.flink.table.data.MapData;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.types.logical.ArrayType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.MapType;
+import org.apache.flink.types.Row;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.flink.connector.janusgraph.util.JanusGraphUtil.getFlinkZoneId;
@@ -69,9 +72,18 @@ public class JanusGraphConverterUtil {
                             toExternal(valueGetter.getElementOrNull(valueArrayData, i), valueType));
                 }
                 return objectMap;
+            case ROW:
+                RowData rowData = (RowData) value;
+                List<LogicalType> childrenTypes = type.getChildren();
+                Row row = new Row(childrenTypes.size());
+                for (int i = 0; i < rowData.getArity(); i++) {
+                    LogicalType childType = childrenTypes.get(i);
+                    RowData.FieldGetter fieldGetter = RowData.createFieldGetter(childType, i);
+                    row.setField(i, toExternal(fieldGetter.getFieldOrNull(rowData), childType));
+                }
+                return row;
             case DECIMAL:
             case MULTISET:
-            case ROW:
             case RAW:
             default:
                 throw new UnsupportedOperationException("Unsupported type:" + type);

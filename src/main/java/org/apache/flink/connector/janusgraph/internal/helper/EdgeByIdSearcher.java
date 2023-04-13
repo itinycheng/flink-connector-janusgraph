@@ -13,22 +13,23 @@ import static org.apache.flink.util.Preconditions.checkArgument;
 /** Search edge by id. */
 public class EdgeByIdSearcher implements ElementObjectSearcher<Edge> {
 
-    private final int edgeColumnIndex;
+    private final int edgeIdIndex;
 
-    public EdgeByIdSearcher(@Nonnull LogicalType edgeColumnType, int edgeColumnIndex) {
-        checkArgument(LogicalTypeRoot.BIGINT.equals(edgeColumnType.getTypeRoot()));
-        checkArgument(edgeColumnIndex >= 0);
+    public EdgeByIdSearcher(@Nonnull LogicalType edgeIdType, int edgeIdIndex) {
+        checkArgument(LogicalTypeRoot.BIGINT.equals(edgeIdType.getTypeRoot()));
+        checkArgument(edgeIdIndex >= 0);
 
-        this.edgeColumnIndex = edgeColumnIndex;
+        this.edgeIdIndex = edgeIdIndex;
     }
 
+    @Nonnull
     @Override
     public Edge search(Object[] rowData, JanusGraphTransaction transaction) {
-        return transaction.traversal().E(rowData[edgeColumnIndex]).next();
+        return transaction.traversal().E(rowData[edgeIdIndex]).next();
     }
 
     @Override
     public int getColumnIndex() {
-        return edgeColumnIndex;
+        return edgeIdIndex;
     }
 }

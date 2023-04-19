@@ -29,6 +29,8 @@ public class JanusGraphConfig {
 
     public static final String SINK_MAX_RETRIES = "sink.max-retries";
 
+    public static final String SINK_NON_UPDATE_COLUMNS = "sink.non-update-columns";
+
     public static final String KEYWORD_ID = "id";
 
     public static final String KEYWORD_LABEL = "label";

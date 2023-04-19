@@ -28,6 +28,8 @@ public class JanusGraphOptions implements Serializable {
 
     private final Integer parallelism;
 
+    private final String[] nonUpdateColumns;
+
     public JanusGraphOptions(
             String factory,
             String hosts,
@@ -40,7 +42,8 @@ public class JanusGraphOptions implements Serializable {
             int batchSize,
             Duration flushInterval,
             int maxRetries,
-            Integer parallelism) {
+            Integer parallelism,
+            String[] nonUpdateColumns) {
         this.factory = factory;
         this.hosts = hosts;
         this.port = port;
@@ -53,6 +56,7 @@ public class JanusGraphOptions implements Serializable {
         this.flushInterval = flushInterval;
         this.maxRetries = maxRetries;
         this.parallelism = parallelism;
+        this.nonUpdateColumns = nonUpdateColumns;
     }
 
     public String getFactory() {
@@ -103,6 +107,10 @@ public class JanusGraphOptions implements Serializable {
         return parallelism;
     }
 
+    public String[] getNonUpdateColumns() {
+        return nonUpdateColumns;
+    }
+
     /** Builder for {@link JanusGraphOptions}. */
     public static class Builder {
         private String factory;
@@ -117,6 +125,8 @@ public class JanusGraphOptions implements Serializable {
         private Duration flushInterval;
         private int maxRetries;
         private Integer parallelism;
+
+        private String[] nonUpdateColumns;
 
         public Builder() {}
 
@@ -180,6 +190,15 @@ public class JanusGraphOptions implements Serializable {
             return this;
         }
 
+        public Builder setNonUpdateColumns(String nonUpdateColumns) {
+            if (nonUpdateColumns == null || nonUpdateColumns.isEmpty()) {
+                this.nonUpdateColumns = new String[0];
+            } else {
+                this.nonUpdateColumns = nonUpdateColumns.split(",");
+            }
+            return this;
+        }
+
         public JanusGraphOptions build() {
             return new JanusGraphOptions(
                     factory,
@@ -193,7 +212,8 @@ public class JanusGraphOptions implements Serializable {
                     batchSize,
                     flushInterval,
                     maxRetries,
-                    parallelism);
+                    parallelism,
+                    nonUpdateColumns);
         }
     }
 }

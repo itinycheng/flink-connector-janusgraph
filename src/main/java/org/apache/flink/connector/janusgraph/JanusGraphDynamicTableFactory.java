@@ -23,6 +23,7 @@ import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptio
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_BATCH_SIZE;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_FLUSH_INTERVAL;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_MAX_RETRIES;
+import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_NON_UPDATE_COLUMNS;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_PARALLELISM;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.TABLE_NAME;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.TABLE_TYPE;
@@ -66,6 +67,7 @@ public class JanusGraphDynamicTableFactory implements DynamicTableSinkFactory {
                 .setFlushInterval(config.get(SINK_FLUSH_INTERVAL))
                 .setMaxRetries(config.get(SINK_MAX_RETRIES))
                 .setParallelism(config.get(SINK_PARALLELISM))
+                .setNonUpdateColumns(config.get(SINK_NON_UPDATE_COLUMNS))
                 .build();
     }
 
@@ -95,6 +97,17 @@ public class JanusGraphDynamicTableFactory implements DynamicTableSinkFactory {
         optionalOptions.add(SINK_BATCH_SIZE);
         optionalOptions.add(SINK_FLUSH_INTERVAL);
         optionalOptions.add(SINK_MAX_RETRIES);
+        optionalOptions.add(SINK_NON_UPDATE_COLUMNS);
+        return optionalOptions;
+    }
+
+    @Override
+    public Set<ConfigOption<?>> forwardOptions() {
+        Set<ConfigOption<?>> optionalOptions = new HashSet<>();
+        optionalOptions.add(SINK_BATCH_SIZE);
+        optionalOptions.add(SINK_FLUSH_INTERVAL);
+        optionalOptions.add(SINK_MAX_RETRIES);
+        optionalOptions.add(SINK_NON_UPDATE_COLUMNS);
         return optionalOptions;
     }
 }

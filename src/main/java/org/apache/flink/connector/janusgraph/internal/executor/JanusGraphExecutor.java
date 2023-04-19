@@ -22,6 +22,8 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraphTransaction;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_E_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_IN_V;
@@ -101,6 +103,7 @@ public abstract class JanusGraphExecutor implements Serializable {
                 ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL),
                 createVertexSearcher(fieldNames, fieldTypes, KEYWORD_V_ID),
                 new JanusGraphRowConverter(RowType.of(fieldTypes)),
+                getNonUpdateColumnIndexes(fieldNames, options.getNonUpdateColumns()),
                 options);
     }
 
@@ -113,6 +116,7 @@ public abstract class JanusGraphExecutor implements Serializable {
                 createVertexSearcher(fieldNames, fieldTypes, KEYWORD_IN_V),
                 createVertexSearcher(fieldNames, fieldTypes, KEYWORD_OUT_V),
                 new JanusGraphRowConverter(RowType.of(fieldTypes)),
+                getNonUpdateColumnIndexes(fieldNames, options.getNonUpdateColumns()),
                 options);
     }
 
@@ -145,5 +149,20 @@ public abstract class JanusGraphExecutor implements Serializable {
         } else {
             throw new RuntimeException("Vertex searcher only support Longs and Maps");
         }
+    }
+
+    private static List<Integer> getNonUpdateColumnIndexes(
+            String[] fieldNames, String[] nonUpdateColumnNames) {
+        List<Integer> nonUpdateColumnIndexes = new ArrayList<>(nonUpdateColumnNames.length);
+        for (int i = 0; i < nonUpdateColumnNames.length; i++) {
+            int nonUpdateColumnIndex = ArrayUtils.indexOf(fieldNames, nonUpdateColumnNames[i]);
+            if (nonUpdateColumnIndex < 0) {
+                throw new RuntimeException(
+                        nonUpdateColumnNames[i] + " is not a valid column name.");
+            }
+            nonUpdateColumnIndexes.set(i, nonUpdateColumnIndex);
+        }
+
+        return nonUpdateColumnIndexes;
     }
 }

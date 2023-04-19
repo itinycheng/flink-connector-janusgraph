@@ -10,7 +10,8 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import javax.annotation.Nonnull;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,9 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
 
     private final JanusGraphRowConverter converter;
 
-    private final List<Integer> reservedFieldIndexes;
+    private final List<Integer> nonWriteColumnIndexes;
+
+    private final List<Integer> nonUpdateColumnIndexes;
 
     static {
         Map<String, Object> reservedKeywordMap = new HashMap<>();
@@ -46,6 +49,7 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
             @Nonnull Integer labelIndex,
             @Nonnull ElementObjectSearcher<Vertex> vertexSearcher,
             @Nonnull JanusGraphRowConverter converter,
+            @Nonnull List<Integer> nonUpdateColumnIndexes,
             @Nonnull JanusGraphOptions options) {
         super(options);
 
@@ -53,7 +57,9 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
         this.fieldNames = checkNotNull(fieldNames);
         this.vertexSearcher = checkNotNull(vertexSearcher);
         this.converter = checkNotNull(converter);
-        this.reservedFieldIndexes = Arrays.asList(labelIndex, vertexSearcher.getColumnIndex());
+        this.nonWriteColumnIndexes = Collections.singletonList(vertexSearcher.getColumnIndex());
+        this.nonUpdateColumnIndexes = new ArrayList<>(nonUpdateColumnIndexes);
+        this.nonUpdateColumnIndexes.add(labelIndex);
     }
 
     @Override
@@ -67,7 +73,7 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
                 Object[] values = converter.toExternal(record);
                 Vertex vertex = vertexSearcher.search(values, transaction);
                 for (int i = 0; i < values.length; i++) {
-                    if (!reservedFieldIndexes.contains(i)) {
+                    if (!nonWriteColumnIndexes.contains(i) || !nonUpdateColumnIndexes.contains(i)) {
                         vertex.property(fieldNames[i], values[i]);
                     }
                 }
@@ -88,6 +94,10 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
     private Object[] mergeWithFieldNames(Object[] values) {
         Object[] keyValuePairs = new Object[values.length * 2];
         for (int i = 0; i < values.length; i++) {
+            if (nonWriteColumnIndexes.contains(i)) {
+                continue;
+            }
+
             int pos = i * 2;
             String fieldName = fieldNames[i];
             keyValuePairs[pos] = RESERVED_FIELDS.getOrDefault(fieldName, fieldName);

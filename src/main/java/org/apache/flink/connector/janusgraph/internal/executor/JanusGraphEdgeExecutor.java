@@ -10,6 +10,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import javax.annotation.Nonnull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +32,9 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
 
     private final JanusGraphRowConverter converter;
 
-    private final List<Integer> reservedFieldIndexes;
+    private final List<Integer> nonWriteColumnIndexes;
+
+    private final List<Integer> nonUpdateColumnIndexes;
 
     public JanusGraphEdgeExecutor(
             @Nonnull String[] fieldNames,
@@ -40,6 +43,7 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
             @Nonnull ElementObjectSearcher<Vertex> inVertexSearcher,
             @Nonnull ElementObjectSearcher<Vertex> outVertexSearcher,
             @Nonnull JanusGraphRowConverter converter,
+            @Nonnull List<Integer> nonUpdateColumnIndexes,
             @Nonnull JanusGraphOptions options) {
         super(options);
 
@@ -51,12 +55,14 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
         this.outVertexSearcher = checkNotNull(outVertexSearcher);
         this.converter = checkNotNull(converter);
         this.maxRetries = checkNotNull(options.getMaxRetries());
-        this.reservedFieldIndexes =
+        this.nonWriteColumnIndexes =
                 Arrays.asList(
-                        labelIndex,
                         edgeSearcher.getColumnIndex(),
                         inVertexSearcher.getColumnIndex(),
                         outVertexSearcher.getColumnIndex());
+
+        this.nonUpdateColumnIndexes = new ArrayList<>(nonUpdateColumnIndexes);
+        this.nonUpdateColumnIndexes.add(labelIndex);
     }
 
     @Override
@@ -67,11 +73,19 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
                 Vertex inV = inVertexSearcher.search(values, transaction);
                 Vertex outV = outVertexSearcher.search(values, transaction);
                 Edge created = inV.addEdge(values[labelIndex].toString(), outV);
-                setExcludingReservedFields(created, values);
+                for (int i = 0; i < values.length; i++) {
+                    if (!nonWriteColumnIndexes.contains(i)) {
+                        created.property(fieldNames[i], values[i]);
+                    }
+                }
                 break;
             case UPDATE_AFTER:
                 Edge searched = edgeSearcher.search(values, transaction);
-                setExcludingReservedFields(searched, values);
+                for (int i = 0; i < values.length; i++) {
+                    if (!nonWriteColumnIndexes.contains(i) || !nonUpdateColumnIndexes.contains(i)) {
+                        searched.property(fieldNames[i], values[i]);
+                    }
+                }
                 break;
             case DELETE:
                 edgeSearcher.search(values, transaction).remove();
@@ -83,14 +97,6 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
                         String.format(
                                 "Unknown row kind, the supported row kinds is: INSERT, UPDATE_BEFORE, UPDATE_AFTER, DELETE, but get: %s.",
                                 record.getRowKind()));
-        }
-    }
-
-    private void setExcludingReservedFields(Edge edge, Object[] values) {
-        for (int i = 0; i < values.length; i++) {
-            if (!reservedFieldIndexes.contains(i)) {
-                edge.property(fieldNames[i], values[i]);
-            }
         }
     }
 }

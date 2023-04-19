@@ -86,4 +86,11 @@ public class JanusGraphConfigOptions {
                     .defaultValue(3)
                     .withDescription(
                             "The max retry times if writing records to JanusGraph failed.");
+
+    public static final ConfigOption<String> SINK_NON_UPDATE_COLUMNS =
+            ConfigOptions.key(JanusGraphConfig.SINK_NON_UPDATE_COLUMNS)
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "Comma separated list of columns that are not allowed to be updated.");
 }

@@ -37,6 +37,8 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
 
     private final List<Integer> nonUpdateColumnIndexes;
 
+    private final int vertexKeyValueCount;
+
     static {
         Map<String, Object> reservedKeywordMap = new HashMap<>();
         reservedKeywordMap.put(KEYWORD_V_ID, T.id);
@@ -60,6 +62,7 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
         this.nonWriteColumnIndexes = Collections.singletonList(vertexSearcher.getColumnIndex());
         this.nonUpdateColumnIndexes = new ArrayList<>(nonUpdateColumnIndexes);
         this.nonUpdateColumnIndexes.add(labelIndex);
+        this.vertexKeyValueCount = (fieldNames.length - nonWriteColumnIndexes.size()) * 2;
     }
 
     @Override
@@ -92,13 +95,14 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
     }
 
     private Object[] mergeWithFieldNames(Object[] values) {
-        Object[] keyValuePairs = new Object[values.length * 2];
+        Object[] keyValuePairs = new Object[vertexKeyValueCount];
+        int index = 0;
         for (int i = 0; i < values.length; i++) {
             if (nonWriteColumnIndexes.contains(i)) {
                 continue;
             }
 
-            int pos = i * 2;
+            int pos = index++ * 2;
             String fieldName = fieldNames[i];
             keyValuePairs[pos] = RESERVED_FIELDS.getOrDefault(fieldName, fieldName);
             keyValuePairs[pos + 1] = values[i];

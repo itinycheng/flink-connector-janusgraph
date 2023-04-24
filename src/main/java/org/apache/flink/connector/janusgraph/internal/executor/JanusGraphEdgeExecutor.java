@@ -64,7 +64,7 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
             case INSERT:
                 Vertex inV = inVertexSearcher.search(values, transaction);
                 Vertex outV = outVertexSearcher.search(values, transaction);
-                Edge created = inV.addEdge(values[labelIndex].toString(), outV);
+                Edge created = outV.addEdge(values[labelIndex].toString(), inV);
                 for (int i = 0; i < values.length; i++) {
                     if (!nonWriteColumnIndexes.contains(i)) {
                         created.property(fieldNames[i], values[i]);

@@ -10,8 +10,6 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import javax.annotation.Nonnull;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +30,6 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
     private final ElementObjectSearcher<Vertex> vertexSearcher;
 
     private final JanusGraphRowConverter converter;
-
-    private final List<Integer> nonWriteColumnIndexes;
-
-    private final List<Integer> nonUpdateColumnIndexes;
 
     private final int vertexKeyValueCount;
 
@@ -59,9 +53,11 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
         this.fieldNames = checkNotNull(fieldNames);
         this.vertexSearcher = checkNotNull(vertexSearcher);
         this.converter = checkNotNull(converter);
-        this.nonWriteColumnIndexes = Collections.singletonList(vertexSearcher.getColumnIndex());
-        this.nonUpdateColumnIndexes = new ArrayList<>(nonUpdateColumnIndexes);
+
+        this.nonWriteColumnIndexes.add(vertexSearcher.getColumnIndex());
+        this.nonUpdateColumnIndexes.addAll(nonUpdateColumnIndexes);
         this.nonUpdateColumnIndexes.add(labelIndex);
+
         this.vertexKeyValueCount = (fieldNames.length - nonWriteColumnIndexes.size()) * 2;
     }
 

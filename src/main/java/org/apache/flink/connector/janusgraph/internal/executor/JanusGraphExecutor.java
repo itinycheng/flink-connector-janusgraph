@@ -23,7 +23,9 @@ import org.janusgraph.core.JanusGraphTransaction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_E_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_IN_V;
@@ -39,7 +41,11 @@ public abstract class JanusGraphExecutor implements Serializable {
 
     protected RuntimeContext runtimeContext;
 
-    protected int maxRetries;
+    protected final int maxRetries;
+
+    protected final Set<Integer> nonWriteColumnIndexes;
+
+    protected final Set<Integer> nonUpdateColumnIndexes;
 
     protected transient JanusGraphConnection connection;
 
@@ -48,6 +54,8 @@ public abstract class JanusGraphExecutor implements Serializable {
     public JanusGraphExecutor(JanusGraphOptions options) {
         checkArgument(options != null && options.getMaxRetries() >= 0);
         this.maxRetries = options.getMaxRetries();
+        this.nonWriteColumnIndexes = new HashSet<>();
+        this.nonUpdateColumnIndexes = new HashSet<>();
     }
 
     public void setRuntimeContext(RuntimeContext context) {
@@ -154,13 +162,12 @@ public abstract class JanusGraphExecutor implements Serializable {
     private static List<Integer> getNonUpdateColumnIndexes(
             String[] fieldNames, String[] nonUpdateColumnNames) {
         List<Integer> nonUpdateColumnIndexes = new ArrayList<>(nonUpdateColumnNames.length);
-        for (int i = 0; i < nonUpdateColumnNames.length; i++) {
-            int nonUpdateColumnIndex = ArrayUtils.indexOf(fieldNames, nonUpdateColumnNames[i]);
+        for (String nonUpdateColumnName : nonUpdateColumnNames) {
+            int nonUpdateColumnIndex = ArrayUtils.indexOf(fieldNames, nonUpdateColumnName);
             if (nonUpdateColumnIndex < 0) {
-                throw new RuntimeException(
-                        nonUpdateColumnNames[i] + " is not a valid column name.");
+                throw new RuntimeException(nonUpdateColumnName + " is not a valid column name.");
             }
-            nonUpdateColumnIndexes.set(i, nonUpdateColumnIndex);
+            nonUpdateColumnIndexes.add(nonUpdateColumnIndex);
         }
 
         return nonUpdateColumnIndexes;

@@ -10,8 +10,6 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import javax.annotation.Nonnull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
@@ -32,10 +30,6 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
 
     private final JanusGraphRowConverter converter;
 
-    private final List<Integer> nonWriteColumnIndexes;
-
-    private final List<Integer> nonUpdateColumnIndexes;
-
     public JanusGraphEdgeExecutor(
             @Nonnull String[] fieldNames,
             @Nonnull Integer labelIndex,
@@ -54,14 +48,12 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
         this.inVertexSearcher = checkNotNull(inVertexSearcher);
         this.outVertexSearcher = checkNotNull(outVertexSearcher);
         this.converter = checkNotNull(converter);
-        this.maxRetries = checkNotNull(options.getMaxRetries());
-        this.nonWriteColumnIndexes =
-                Arrays.asList(
-                        edgeSearcher.getColumnIndex(),
-                        inVertexSearcher.getColumnIndex(),
-                        outVertexSearcher.getColumnIndex());
 
-        this.nonUpdateColumnIndexes = new ArrayList<>(nonUpdateColumnIndexes);
+        this.nonWriteColumnIndexes.add(edgeSearcher.getColumnIndex());
+        this.nonWriteColumnIndexes.add(inVertexSearcher.getColumnIndex());
+        this.nonWriteColumnIndexes.add(outVertexSearcher.getColumnIndex());
+
+        this.nonUpdateColumnIndexes.addAll(nonUpdateColumnIndexes);
         this.nonUpdateColumnIndexes.add(labelIndex);
     }
 

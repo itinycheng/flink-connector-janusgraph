@@ -53,8 +53,9 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
         this.fieldNames = checkNotNull(fieldNames);
         this.vertexSearcher = checkNotNull(vertexSearcher);
         this.converter = checkNotNull(converter);
-
+        // non-writable columns.
         this.nonWriteColumnIndexes.add(vertexSearcher.getColumnIndex());
+        // non-updatable columns.
         this.nonUpdateColumnIndexes.addAll(nonUpdateColumnIndexes);
         this.nonUpdateColumnIndexes.add(labelIndex);
 

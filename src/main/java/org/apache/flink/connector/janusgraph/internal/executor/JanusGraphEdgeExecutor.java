@@ -48,13 +48,13 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
         this.inVertexSearcher = checkNotNull(inVertexSearcher);
         this.outVertexSearcher = checkNotNull(outVertexSearcher);
         this.converter = checkNotNull(converter);
-
+        // non-writable columns.
+        this.nonWriteColumnIndexes.add(labelIndex);
         this.nonWriteColumnIndexes.add(edgeSearcher.getColumnIndex());
         this.nonWriteColumnIndexes.add(inVertexSearcher.getColumnIndex());
         this.nonWriteColumnIndexes.add(outVertexSearcher.getColumnIndex());
-
+        // non-updatable columns.
         this.nonUpdateColumnIndexes.addAll(nonUpdateColumnIndexes);
-        this.nonUpdateColumnIndexes.add(labelIndex);
     }
 
     @Override

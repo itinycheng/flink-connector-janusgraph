@@ -26,23 +26,37 @@ public class EdgeByPropSearcher implements ElementObjectSearcher<Edge> {
 
     private final String[] edgeIdFieldNames;
 
+    private final String[] inVertexFieldNames;
+
+    private final String[] outVertexFieldNames;
+
     public EdgeByPropSearcher(
-            @Nonnull LogicalType edgeIdType,
             int edgeIdIndex,
             int edgeLabelIndex,
             int inVertexIndex,
-            int outVertexIndex) {
+            int outVertexIndex,
+            @Nonnull LogicalType edgeIdType,
+            @Nonnull LogicalType inVertexType,
+            @Nonnull LogicalType outVertexType) {
         checkArgument(LogicalTypeRoot.ROW.equals(edgeIdType.getTypeRoot()));
         checkArgument(edgeIdIndex >= 0);
         checkArgument(edgeLabelIndex >= 0);
         checkArgument(inVertexIndex >= 0);
         checkArgument(outVertexIndex >= 0);
 
-        this.edgeLabelIndex = edgeLabelIndex;
         this.edgeIdIndex = edgeIdIndex;
+        this.edgeLabelIndex = edgeLabelIndex;
         this.inVertexIndex = inVertexIndex;
         this.outVertexIndex = outVertexIndex;
         this.edgeIdFieldNames = ((RowType) edgeIdType).getFieldNames().toArray(new String[0]);
+        this.inVertexFieldNames =
+                inVertexType instanceof RowType
+                        ? ((RowType) inVertexType).getFieldNames().toArray(new String[0])
+                        : new String[0];
+        this.outVertexFieldNames =
+                outVertexType instanceof RowType
+                        ? ((RowType) outVertexType).getFieldNames().toArray(new String[0])
+                        : new String[0];
     }
 
     @Nonnull
@@ -52,20 +66,21 @@ public class EdgeByPropSearcher implements ElementObjectSearcher<Edge> {
                 transaction
                         .traversal()
                         .V()
-                        .in()
-                        .where(getVertexTraversal(rowData[inVertexIndex]))
+                        .where(getVertexTraversal(rowData[outVertexIndex], outVertexFieldNames))
                         .outE(rowData[edgeLabelIndex].toString())
                         .as("e")
                         .inV()
-                        .where(getVertexTraversal(rowData[outVertexIndex]))
+                        .where(getVertexTraversal(rowData[inVertexIndex], inVertexFieldNames))
                         .select("e");
 
         Row edgeIdRow = (Row) rowData[edgeIdIndex];
-        for (int i = 0; i < edgeIdRow.getArity(); i++) {
-            final String key = edgeIdFieldNames[i];
-            final Object value = edgeIdRow.getField(i);
-            if (!KEYWORD_LABEL.equals(key) && value != null) {
-                traversal = traversal.has(key, value);
+        if (edgeIdRow != null) {
+            for (int i = 0; i < edgeIdRow.getArity(); i++) {
+                final String key = edgeIdFieldNames[i];
+                final Object value = edgeIdRow.getField(i);
+                if (!KEYWORD_LABEL.equals(key) && value != null) {
+                    traversal = traversal.has(key, value);
+                }
             }
         }
 
@@ -77,14 +92,15 @@ public class EdgeByPropSearcher implements ElementObjectSearcher<Edge> {
         return edgeIdIndex;
     }
 
-    private GraphTraversal<Vertex, Vertex> getVertexTraversal(Object vertexData) {
+    private GraphTraversal<Vertex, Vertex> getVertexTraversal(
+            Object vertexData, String[] vertexFieldNames) {
         if (vertexData instanceof Number) {
             return __.V(((Number) vertexData).longValue());
         } else {
             GraphTraversal<Vertex, Vertex> traversal = __.V();
             Row vertexRow = (Row) vertexData;
             for (int i = 0; i < vertexRow.getArity(); i++) {
-                String fieldName = edgeIdFieldNames[i];
+                String fieldName = vertexFieldNames[i];
                 Object fieldValue = vertexRow.getField(i);
                 if (fieldValue != null) {
                     if (KEYWORD_LABEL.equals(fieldName)) {

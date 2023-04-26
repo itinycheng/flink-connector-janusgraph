@@ -135,12 +135,16 @@ public abstract class JanusGraphExecutor implements Serializable {
         if (LogicalTypeRoot.BIGINT.equals(edgeColumnType.getTypeRoot())) {
             return new EdgeByIdSearcher(edgeColumnType, edgeColumnIndex);
         } else if (LogicalTypeRoot.ROW.equals(edgeColumnType.getTypeRoot())) {
+            int inVertexIndex = ArrayUtils.indexOf(fieldNames, KEYWORD_IN_V);
+            int outVertexIndex = ArrayUtils.indexOf(fieldNames, KEYWORD_OUT_V);
             return new EdgeByPropSearcher(
-                    edgeColumnType,
                     edgeColumnIndex,
                     ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL),
-                    ArrayUtils.indexOf(fieldNames, KEYWORD_IN_V),
-                    ArrayUtils.indexOf(fieldNames, KEYWORD_OUT_V));
+                    inVertexIndex,
+                    outVertexIndex,
+                    edgeColumnType,
+                    fieldTypes[inVertexIndex],
+                    fieldTypes[outVertexIndex]);
         } else {
             throw new RuntimeException("Vertex searcher only support Longs and Maps");
         }

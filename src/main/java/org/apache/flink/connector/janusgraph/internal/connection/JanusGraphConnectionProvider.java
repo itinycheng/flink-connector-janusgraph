@@ -32,7 +32,10 @@ public class JanusGraphConnectionProvider implements Serializable {
             return connection;
         }
 
-        LOG.info("connecting to {}, database {}", options, configProperties);
+        LOG.info(
+                "Creating JanusGraph connection, options: {}, properties: {}",
+                options,
+                configProperties);
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configProperties.forEach((k, v) -> configuration.addProperty(k.toString(), v));
         configuration.addProperty("gremlin.graph", options.getFactory());

@@ -5,6 +5,7 @@ import org.apache.flink.connector.janusgraph.config.TableType;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.Arrays;
 
 /** Options for JanusGraph connector. */
 public class JanusGraphOptions implements Serializable {
@@ -109,6 +110,43 @@ public class JanusGraphOptions implements Serializable {
 
     public String[] getNonUpdateColumns() {
         return nonUpdateColumns;
+    }
+
+    @Override
+    public String toString() {
+        return "JanusGraphOptions{"
+                + "factory='"
+                + factory
+                + '\''
+                + ", hosts='"
+                + hosts
+                + '\''
+                + ", port="
+                + port
+                + ", backendType="
+                + backendType
+                + ", username='"
+                + username
+                + '\''
+                + ", password='"
+                + password
+                + '\''
+                + ", tableName='"
+                + tableName
+                + '\''
+                + ", tableType="
+                + tableType
+                + ", batchSize="
+                + batchSize
+                + ", flushInterval="
+                + flushInterval
+                + ", maxRetries="
+                + maxRetries
+                + ", parallelism="
+                + parallelism
+                + ", nonUpdateColumns="
+                + Arrays.toString(nonUpdateColumns)
+                + '}';
     }
 
     /** Builder for {@link JanusGraphOptions}. */

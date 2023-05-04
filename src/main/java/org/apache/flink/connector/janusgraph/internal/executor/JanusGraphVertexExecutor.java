@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.unmodifiableMap;
+import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
-import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_V_ID;
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -35,7 +35,7 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
 
     static {
         Map<String, Object> reservedKeywordMap = new HashMap<>();
-        reservedKeywordMap.put(KEYWORD_V_ID, T.id);
+        reservedKeywordMap.put(KEYWORD_ID, T.id);
         reservedKeywordMap.put(KEYWORD_LABEL, T.label);
         RESERVED_FIELDS = unmodifiableMap(reservedKeywordMap);
     }

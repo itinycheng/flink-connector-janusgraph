@@ -27,11 +27,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_E_ID;
+import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_IN_V;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_OUT_V;
-import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_V_ID;
 import static org.apache.flink.connector.janusgraph.config.TableType.EDGE;
 import static org.apache.flink.connector.janusgraph.config.TableType.VERTEX;
 import static org.apache.flink.util.Preconditions.checkArgument;
@@ -109,7 +108,7 @@ public abstract class JanusGraphExecutor implements Serializable {
         return new JanusGraphVertexExecutor(
                 fieldNames,
                 ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL),
-                createVertexSearcher(fieldNames, fieldTypes, KEYWORD_V_ID),
+                createVertexSearcher(fieldNames, fieldTypes, KEYWORD_ID),
                 new JanusGraphRowConverter(RowType.of(fieldTypes)),
                 getNonUpdateColumnIndexes(fieldNames, options.getNonUpdateColumns()),
                 options);
@@ -120,7 +119,7 @@ public abstract class JanusGraphExecutor implements Serializable {
         return new JanusGraphEdgeExecutor(
                 fieldNames,
                 ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL),
-                createEdgeSearcher(fieldNames, fieldTypes, KEYWORD_E_ID),
+                createEdgeSearcher(fieldNames, fieldTypes, KEYWORD_ID),
                 createVertexSearcher(fieldNames, fieldTypes, KEYWORD_IN_V),
                 createVertexSearcher(fieldNames, fieldTypes, KEYWORD_OUT_V),
                 new JanusGraphRowConverter(RowType.of(fieldTypes)),

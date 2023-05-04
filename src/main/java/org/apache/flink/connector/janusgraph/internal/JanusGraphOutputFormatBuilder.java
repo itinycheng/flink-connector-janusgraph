@@ -1,6 +1,5 @@
 package org.apache.flink.connector.janusgraph.internal;
 
-import org.apache.flink.connector.janusgraph.config.TableType;
 import org.apache.flink.connector.janusgraph.internal.connection.JanusGraphConnectionProvider;
 import org.apache.flink.connector.janusgraph.options.JanusGraphOptions;
 import org.apache.flink.table.data.RowData;
@@ -14,9 +13,8 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.function.Function;
 
-import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_E_ID;
+import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
-import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_V_ID;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** JanusGraph output format builder. */
@@ -77,27 +75,14 @@ public class JanusGraphOutputFormatBuilder implements Serializable {
                 options);
     }
 
-    /**
-     * Vertices must have columns of v_id, label.<br>
-     * Edges must have columns of e_id, label.
-     */
+    /** Table must contain columns of id, label.<br> */
     private void validateInternalColumns() {
-        if (TableType.VERTEX.equals(options.getTableType())) {
-            if (!ArrayUtils.contains(fieldNames, KEYWORD_LABEL)
-                    || !ArrayUtils.contains(fieldNames, KEYWORD_V_ID)) {
-                throw new RuntimeException(
-                        String.format(
-                                "Vertex table must contains columns of %s and %s",
-                                KEYWORD_LABEL, KEYWORD_V_ID));
-            }
-        } else if (TableType.EDGE.equals(options.getTableType())) {
-            if (!ArrayUtils.contains(fieldNames, KEYWORD_LABEL)
-                    || !ArrayUtils.contains(fieldNames, KEYWORD_E_ID)) {
-                throw new RuntimeException(
-                        String.format(
-                                "Edge table must contains columns of %s and %s",
-                                KEYWORD_LABEL, KEYWORD_E_ID));
-            }
+        if (!ArrayUtils.contains(fieldNames, KEYWORD_LABEL)
+                || !ArrayUtils.contains(fieldNames, KEYWORD_ID)) {
+            throw new RuntimeException(
+                    String.format(
+                            "%s table must contains columns of %s and %s",
+                            options.getTableType(), KEYWORD_LABEL, KEYWORD_ID));
         } else {
             throw new RuntimeException("Unknown table type: " + options.getTableType());
         }

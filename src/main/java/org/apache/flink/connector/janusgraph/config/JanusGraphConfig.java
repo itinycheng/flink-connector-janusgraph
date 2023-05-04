@@ -35,10 +35,6 @@ public class JanusGraphConfig {
 
     public static final String KEYWORD_LABEL = "label";
 
-    public static final String KEYWORD_V_ID = "v_id";
-
-    public static final String KEYWORD_E_ID = "e_id";
-
     public static final String KEYWORD_IN_V = "in_v";
 
     public static final String KEYWORD_OUT_V = "out_v";

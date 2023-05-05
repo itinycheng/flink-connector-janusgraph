@@ -33,7 +33,7 @@ public class JanusGraphConfigOptions {
     public static final ConfigOption<BackendType> BACKEND_TYPE =
             ConfigOptions.key(JanusGraphConfig.BACKEND_TYPE)
                     .enumType(BackendType.class)
-                    .noDefaultValue()
+                    .defaultValue(BackendType.HBASE)
                     .withDescription("Type of storage backend, currently only supports `hbase`.");
 
     public static final ConfigOption<String> USERNAME =
@@ -41,7 +41,7 @@ public class JanusGraphConfigOptions {
                     .stringType()
                     .noDefaultValue()
                     .withDescription(
-                            "Username to authenticate against storage backend, equal to JanusGraph config `storage.username`");
+                            "Username to authenticate against storage backend, equal to JanusGraph config `storage.username`.");
 
     public static final ConfigOption<String> PASSWORD =
             ConfigOptions.key(JanusGraphConfig.PASSWORD)

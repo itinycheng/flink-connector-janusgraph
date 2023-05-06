@@ -83,8 +83,6 @@ public class JanusGraphOutputFormatBuilder implements Serializable {
                     String.format(
                             "%s table must contains columns of %s and %s",
                             options.getTableType(), KEYWORD_LABEL, KEYWORD_ID));
-        } else {
-            throw new RuntimeException("Unknown table type: " + options.getTableType());
         }
     }
 }

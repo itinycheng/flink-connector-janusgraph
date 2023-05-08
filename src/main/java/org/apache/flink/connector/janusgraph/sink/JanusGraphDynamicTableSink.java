@@ -9,7 +9,6 @@ import org.apache.flink.table.connector.sink.SinkFunctionProvider;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.RowKind;
-import org.apache.flink.util.Preconditions;
 
 import javax.annotation.Nonnull;
 
@@ -39,18 +38,11 @@ public class JanusGraphDynamicTableSink implements DynamicTableSink {
 
     @Override
     public ChangelogMode getChangelogMode(ChangelogMode requestedMode) {
-        validatePrimaryKey(requestedMode);
         return ChangelogMode.newBuilder()
                 .addContainedKind(RowKind.INSERT)
                 .addContainedKind(RowKind.UPDATE_AFTER)
                 .addContainedKind(RowKind.DELETE)
                 .build();
-    }
-
-    private void validatePrimaryKey(ChangelogMode requestedMode) {
-        Preconditions.checkState(
-                ChangelogMode.insertOnly().equals(requestedMode) || primaryKeys.length > 0,
-                "Please declare primary key for sink table when query contains update/delete record.");
     }
 
     @Override

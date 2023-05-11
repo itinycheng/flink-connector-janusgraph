@@ -73,7 +73,7 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
                 Object[] values = converter.toExternal(record);
                 Vertex vertex = vertexSearcher.search(values, transaction);
                 for (int i = 0; i < values.length; i++) {
-                    if (!nonWriteColumnIndexes.contains(i) || !nonUpdateColumnIndexes.contains(i)) {
+                    if (!nonWriteColumnIndexes.contains(i) && !nonUpdateColumnIndexes.contains(i)) {
                         vertex.property(fieldNames[i], values[i]);
                     }
                 }

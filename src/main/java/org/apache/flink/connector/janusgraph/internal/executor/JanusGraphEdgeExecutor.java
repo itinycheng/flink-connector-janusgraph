@@ -74,7 +74,7 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
             case UPDATE_AFTER:
                 Edge searched = edgeSearcher.search(values, transaction);
                 for (int i = 0; i < values.length; i++) {
-                    if (!nonWriteColumnIndexes.contains(i) || !nonUpdateColumnIndexes.contains(i)) {
+                    if (!nonWriteColumnIndexes.contains(i) && !nonUpdateColumnIndexes.contains(i)) {
                         searched.property(fieldNames[i], values[i]);
                     }
                 }

@@ -7,6 +7,8 @@ import org.apache.flink.table.data.RowData;
 
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
@@ -17,11 +19,15 @@ import java.util.Map;
 import static java.util.Collections.unmodifiableMap;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
+import static org.apache.flink.connector.janusgraph.options.UpdateNotFoundStrategy.FAIL;
+import static org.apache.flink.connector.janusgraph.options.UpdateNotFoundStrategy.INSERT;
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** JanusGraph vertex executor. */
 public class JanusGraphVertexExecutor extends JanusGraphExecutor {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JanusGraphVertexExecutor.class);
 
     private static final Map<String, Object> RESERVED_FIELDS;
 
@@ -64,6 +70,7 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
 
     @Override
     public void addToBatch(RowData record) {
+        Vertex vertex;
         switch (record.getRowKind()) {
             case INSERT:
                 Object[] keyValuePairs = mergeWithFieldNames(converter.toExternal(record));
@@ -71,15 +78,29 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
                 break;
             case UPDATE_AFTER:
                 Object[] values = converter.toExternal(record);
-                Vertex vertex = vertexSearcher.search(values, transaction);
-                for (int i = 0; i < values.length; i++) {
-                    if (!nonWriteColumnIndexes.contains(i) && !nonUpdateColumnIndexes.contains(i)) {
-                        vertex.property(fieldNames[i], values[i]);
+                vertex = vertexSearcher.search(values, transaction);
+                if (vertex != null) {
+                    for (int i = 0; i < values.length; i++) {
+                        if (!nonWriteColumnIndexes.contains(i)
+                                && !nonUpdateColumnIndexes.contains(i)) {
+                            vertex.property(fieldNames[i], values[i]);
+                        }
+                    }
+                } else {
+                    if (updateNotFoundStrategy == FAIL) {
+                        throw new RuntimeException("Update vertex not found.");
+                    } else if (updateNotFoundStrategy == INSERT) {
+                        transaction.addVertex(mergeWithFieldNames(values));
+                    } else {
+                        LOG.debug("Update vertex: [{}], not found, just ignore it.", record);
                     }
                 }
                 break;
             case DELETE:
-                vertexSearcher.search(converter.toExternal(record), transaction).remove();
+                vertex = vertexSearcher.search(converter.toExternal(record), transaction);
+                if (vertex != null) {
+                    vertex.remove();
+                }
                 break;
             case UPDATE_BEFORE:
                 break;

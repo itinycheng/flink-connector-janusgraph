@@ -2,6 +2,7 @@ package org.apache.flink.connector.janusgraph.config;
 
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
+import org.apache.flink.connector.janusgraph.options.UpdateNotFoundStrategy;
 import org.apache.flink.table.factories.FactoryUtil;
 
 import java.time.Duration;
@@ -93,4 +94,11 @@ public class JanusGraphConfigOptions {
                     .noDefaultValue()
                     .withDescription(
                             "Comma separated list of columns that are not allowed to be updated.");
+
+    public static final ConfigOption<UpdateNotFoundStrategy> SINK_UPDATE_NOT_FOUND_STRATEGY =
+            ConfigOptions.key(JanusGraphConfig.SINK_UPDATE_NOT_FOUND_STRATEGY)
+                    .enumType(UpdateNotFoundStrategy.class)
+                    .defaultValue(UpdateNotFoundStrategy.FAIL)
+                    .withDescription(
+                            "The strategy when updating elements not found in JanusGraph, available: fail, ignore, insert.");
 }

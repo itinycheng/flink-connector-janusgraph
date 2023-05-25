@@ -3,10 +3,12 @@ package org.apache.flink.connector.janusgraph.internal.helper;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.LogicalTypeRoot;
 
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraphTransaction;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 
@@ -21,10 +23,12 @@ public class VertexByIdSearcher implements ElementObjectSearcher<Vertex> {
         this.vertexIdIndex = vertexIdIndex;
     }
 
-    @Nonnull
+    @Nullable
     @Override
     public Vertex search(Object[] rowData, JanusGraphTransaction transaction) {
-        return transaction.traversal().V(rowData[vertexIdIndex]).next();
+        GraphTraversal<Vertex, Vertex> traversal =
+                transaction.traversal().V(rowData[vertexIdIndex]);
+        return traversal.hasNext() ? traversal.next() : null;
     }
 
     @Override

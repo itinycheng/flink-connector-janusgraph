@@ -10,6 +10,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraphTransaction;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_ID;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
@@ -31,7 +32,7 @@ public class VertexByPropSearcher implements ElementObjectSearcher<Vertex> {
                 ((RowType) vertexColumnType).getFieldNames().toArray(new String[0]);
     }
 
-    @Nonnull
+    @Nullable
     @Override
     public Vertex search(Object[] rowData, JanusGraphTransaction transaction) {
         Row vertexRow = (Row) rowData[vertexColumnIndex];
@@ -52,7 +53,7 @@ public class VertexByPropSearcher implements ElementObjectSearcher<Vertex> {
             }
         }
 
-        return traversal.next();
+        return traversal.hasNext() ? traversal.next() : null;
     }
 
     @Override

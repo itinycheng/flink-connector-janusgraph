@@ -11,6 +11,7 @@ import org.apache.flink.connector.janusgraph.internal.helper.ElementObjectSearch
 import org.apache.flink.connector.janusgraph.internal.helper.VertexByIdSearcher;
 import org.apache.flink.connector.janusgraph.internal.helper.VertexByPropSearcher;
 import org.apache.flink.connector.janusgraph.options.JanusGraphOptions;
+import org.apache.flink.connector.janusgraph.options.UpdateNotFoundStrategy;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.LogicalTypeRoot;
@@ -34,6 +35,7 @@ import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYW
 import static org.apache.flink.connector.janusgraph.config.TableType.EDGE;
 import static org.apache.flink.connector.janusgraph.config.TableType.VERTEX;
 import static org.apache.flink.util.Preconditions.checkArgument;
+import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** Executor interface for submitting data to JanusGraph. */
 public abstract class JanusGraphExecutor implements Serializable {
@@ -41,6 +43,8 @@ public abstract class JanusGraphExecutor implements Serializable {
     protected RuntimeContext runtimeContext;
 
     protected final int maxRetries;
+
+    protected final UpdateNotFoundStrategy updateNotFoundStrategy;
 
     protected final Set<Integer> nonWriteColumnIndexes;
 
@@ -52,7 +56,10 @@ public abstract class JanusGraphExecutor implements Serializable {
 
     public JanusGraphExecutor(JanusGraphOptions options) {
         checkArgument(options != null && options.getMaxRetries() >= 0);
+        checkNotNull(options.getUpdateNotFoundStrategy());
+
         this.maxRetries = options.getMaxRetries();
+        this.updateNotFoundStrategy = options.getUpdateNotFoundStrategy();
         this.nonWriteColumnIndexes = new HashSet<>();
         this.nonUpdateColumnIndexes = new HashSet<>();
     }

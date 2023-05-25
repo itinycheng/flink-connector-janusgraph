@@ -12,6 +12,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraphTransaction;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfig.KEYWORD_LABEL;
 import static org.apache.flink.util.Preconditions.checkArgument;
@@ -59,7 +60,7 @@ public class EdgeByPropSearcher implements ElementObjectSearcher<Edge> {
                         : new String[0];
     }
 
-    @Nonnull
+    @Nullable
     @Override
     public Edge search(Object[] rowData, JanusGraphTransaction transaction) {
         GraphTraversal<Vertex, Object> traversal =
@@ -84,7 +85,7 @@ public class EdgeByPropSearcher implements ElementObjectSearcher<Edge> {
             }
         }
 
-        return (Edge) traversal.next();
+        return (Edge) (traversal.hasNext() ? traversal.next() : null);
     }
 
     @Override

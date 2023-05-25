@@ -3,10 +3,12 @@ package org.apache.flink.connector.janusgraph.internal.helper;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.LogicalTypeRoot;
 
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.janusgraph.core.JanusGraphTransaction;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 
@@ -22,10 +24,11 @@ public class EdgeByIdSearcher implements ElementObjectSearcher<Edge> {
         this.edgeIdIndex = edgeIdIndex;
     }
 
-    @Nonnull
+    @Nullable
     @Override
     public Edge search(Object[] rowData, JanusGraphTransaction transaction) {
-        return transaction.traversal().E(rowData[edgeIdIndex]).next();
+        GraphTraversal<Edge, Edge> traversal = transaction.traversal().E(rowData[edgeIdIndex]);
+        return traversal.hasNext() ? traversal.next() : null;
     }
 
     @Override

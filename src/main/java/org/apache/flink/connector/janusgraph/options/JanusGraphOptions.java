@@ -31,6 +31,8 @@ public class JanusGraphOptions implements Serializable {
 
     private final String[] nonUpdateColumns;
 
+    private final UpdateNotFoundStrategy updateNotFoundStrategy;
+
     public JanusGraphOptions(
             String factory,
             String hosts,
@@ -44,7 +46,8 @@ public class JanusGraphOptions implements Serializable {
             Duration flushInterval,
             int maxRetries,
             Integer parallelism,
-            String[] nonUpdateColumns) {
+            String[] nonUpdateColumns,
+            UpdateNotFoundStrategy updateNotFoundStrategy) {
         this.factory = factory;
         this.hosts = hosts;
         this.port = port;
@@ -58,6 +61,7 @@ public class JanusGraphOptions implements Serializable {
         this.maxRetries = maxRetries;
         this.parallelism = parallelism;
         this.nonUpdateColumns = nonUpdateColumns;
+        this.updateNotFoundStrategy = updateNotFoundStrategy;
     }
 
     public String getFactory() {
@@ -112,6 +116,10 @@ public class JanusGraphOptions implements Serializable {
         return nonUpdateColumns;
     }
 
+    public UpdateNotFoundStrategy getUpdateNotFoundStrategy() {
+        return updateNotFoundStrategy;
+    }
+
     @Override
     public String toString() {
         return "JanusGraphOptions{"
@@ -146,6 +154,8 @@ public class JanusGraphOptions implements Serializable {
                 + parallelism
                 + ", nonUpdateColumns="
                 + Arrays.toString(nonUpdateColumns)
+                + ", updateNotFoundStrategy="
+                + updateNotFoundStrategy
                 + '}';
     }
 
@@ -165,6 +175,8 @@ public class JanusGraphOptions implements Serializable {
         private Integer parallelism;
 
         private String[] nonUpdateColumns;
+
+        private UpdateNotFoundStrategy updateNotFoundStrategy;
 
         public Builder() {}
 
@@ -237,6 +249,11 @@ public class JanusGraphOptions implements Serializable {
             return this;
         }
 
+        public Builder setUpdateNotFoundStrategy(UpdateNotFoundStrategy updateNotFoundStrategy) {
+            this.updateNotFoundStrategy = updateNotFoundStrategy;
+            return this;
+        }
+
         public JanusGraphOptions build() {
             return new JanusGraphOptions(
                     factory,
@@ -251,7 +268,8 @@ public class JanusGraphOptions implements Serializable {
                     flushInterval,
                     maxRetries,
                     parallelism,
-                    nonUpdateColumns);
+                    nonUpdateColumns,
+                    updateNotFoundStrategy);
         }
     }
 }

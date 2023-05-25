@@ -25,6 +25,7 @@ import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptio
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_MAX_RETRIES;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_NON_UPDATE_COLUMNS;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_PARALLELISM;
+import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_UPDATE_NOT_FOUND_STRATEGY;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.TABLE_NAME;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.TABLE_TYPE;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.USERNAME;
@@ -68,6 +69,7 @@ public class JanusGraphDynamicTableFactory implements DynamicTableSinkFactory {
                 .setMaxRetries(config.get(SINK_MAX_RETRIES))
                 .setParallelism(config.get(SINK_PARALLELISM))
                 .setNonUpdateColumns(config.get(SINK_NON_UPDATE_COLUMNS))
+                .setUpdateNotFoundStrategy(config.get(SINK_UPDATE_NOT_FOUND_STRATEGY))
                 .build();
     }
 

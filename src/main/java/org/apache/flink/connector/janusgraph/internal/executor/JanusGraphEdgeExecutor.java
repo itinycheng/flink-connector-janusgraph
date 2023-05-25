@@ -7,16 +7,22 @@ import org.apache.flink.table.data.RowData;
 
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
 import java.util.List;
 
+import static org.apache.flink.connector.janusgraph.options.UpdateNotFoundStrategy.FAIL;
+import static org.apache.flink.connector.janusgraph.options.UpdateNotFoundStrategy.INSERT;
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** JanusGraph edge executor. */
 public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JanusGraphVertexExecutor.class);
 
     private final String[] fieldNames;
 
@@ -60,27 +66,30 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
     @Override
     public void addToBatch(RowData record) {
         Object[] values = converter.toExternal(record);
+        Edge searched;
         switch (record.getRowKind()) {
             case INSERT:
-                Vertex inV = inVertexSearcher.search(values, transaction);
-                Vertex outV = outVertexSearcher.search(values, transaction);
-                Edge created = outV.addEdge(values[labelIndex].toString(), inV);
-                for (int i = 0; i < values.length; i++) {
-                    if (!nonWriteColumnIndexes.contains(i)) {
-                        created.property(fieldNames[i], values[i]);
-                    }
-                }
+                createEdge(values);
                 break;
             case UPDATE_AFTER:
-                Edge searched = edgeSearcher.search(values, transaction);
-                for (int i = 0; i < values.length; i++) {
-                    if (!nonWriteColumnIndexes.contains(i) && !nonUpdateColumnIndexes.contains(i)) {
-                        searched.property(fieldNames[i], values[i]);
+                searched = edgeSearcher.search(values, transaction);
+                if (searched != null) {
+                    updateEdge(searched, values);
+                } else {
+                    if (updateNotFoundStrategy == FAIL) {
+                        throw new RuntimeException("Edge not found");
+                    } else if (updateNotFoundStrategy == INSERT) {
+                        createEdge(values);
+                    } else {
+                        LOG.debug("Not found edge: [{}], ignore update it", record);
                     }
                 }
                 break;
             case DELETE:
-                edgeSearcher.search(values, transaction).remove();
+                searched = edgeSearcher.search(values, transaction);
+                if (searched != null) {
+                    searched.remove();
+                }
                 break;
             case UPDATE_BEFORE:
                 break;
@@ -89,6 +98,25 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
                         String.format(
                                 "Unknown row kind, the supported row kinds is: INSERT, UPDATE_BEFORE, UPDATE_AFTER, DELETE, but get: %s.",
                                 record.getRowKind()));
+        }
+    }
+
+    private void createEdge(Object[] values) {
+        Vertex inV = inVertexSearcher.search(values, transaction);
+        Vertex outV = outVertexSearcher.search(values, transaction);
+        Edge created = outV.addEdge(values[labelIndex].toString(), inV);
+        for (int i = 0; i < values.length; i++) {
+            if (!nonWriteColumnIndexes.contains(i)) {
+                created.property(fieldNames[i], values[i]);
+            }
+        }
+    }
+
+    private void updateEdge(Edge edge, Object[] values) {
+        for (int i = 0; i < values.length; i++) {
+            if (!nonWriteColumnIndexes.contains(i) && !nonUpdateColumnIndexes.contains(i)) {
+                edge.property(fieldNames[i], values[i]);
+            }
         }
     }
 }

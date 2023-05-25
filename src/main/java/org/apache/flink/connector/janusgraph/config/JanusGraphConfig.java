@@ -31,6 +31,8 @@ public class JanusGraphConfig {
 
     public static final String SINK_NON_UPDATE_COLUMNS = "sink.non-update-columns";
 
+    public static final String SINK_UPDATE_NOT_FOUND_STRATEGY = "sink.update-not-found-strategy";
+
     public static final String KEYWORD_ID = "id";
 
     public static final String KEYWORD_LABEL = "label";

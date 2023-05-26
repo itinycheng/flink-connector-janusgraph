@@ -100,6 +100,7 @@ public class JanusGraphDynamicTableFactory implements DynamicTableSinkFactory {
         optionalOptions.add(SINK_FLUSH_INTERVAL);
         optionalOptions.add(SINK_MAX_RETRIES);
         optionalOptions.add(SINK_NON_UPDATE_COLUMNS);
+        optionalOptions.add(SINK_UPDATE_NOT_FOUND_STRATEGY);
         return optionalOptions;
     }
 
@@ -110,6 +111,7 @@ public class JanusGraphDynamicTableFactory implements DynamicTableSinkFactory {
         optionalOptions.add(SINK_FLUSH_INTERVAL);
         optionalOptions.add(SINK_MAX_RETRIES);
         optionalOptions.add(SINK_NON_UPDATE_COLUMNS);
+        optionalOptions.add(SINK_UPDATE_NOT_FOUND_STRATEGY);
         return optionalOptions;
     }
 }

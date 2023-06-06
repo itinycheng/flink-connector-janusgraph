@@ -11,24 +11,22 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.apache.flink.util.Preconditions.checkNotNull;
-
 /** JanusGraph connection. */
 public class JanusGraphConnection {
 
-    private static final Map<SameConfiguration, JanusGraph> CACHED_JANUS_GRAPH_CLIENTS =
+    private static final Map<SameConfiguration, JanusGraph> CACHED_CLIENTS =
             new ConcurrentHashMap<>();
 
-    private final Configuration configuration;
+    private final SameConfiguration configuration;
 
     // Thread safety.
     private final JanusGraph graph;
 
     public JanusGraphConnection(@Nonnull Configuration configuration) {
-        this.configuration = checkNotNull(configuration);
+        this.configuration = new SameConfiguration(configuration);
         this.graph =
-                CACHED_JANUS_GRAPH_CLIENTS.computeIfAbsent(
-                        new SameConfiguration(configuration),
+                CACHED_CLIENTS.computeIfAbsent(
+                        this.configuration,
                         k ->
                                 JanusGraphFactory.open(
                                         new CommonsConfiguration(k.getConfiguration())));
@@ -38,11 +36,11 @@ public class JanusGraphConnection {
         return graph.newTransaction();
     }
 
-    public Configuration getConfiguration() {
-        return configuration;
-    }
-
     public void close() {
+        JanusGraph janusGraph = CACHED_CLIENTS.remove(configuration);
+        if (janusGraph != null) {
+            janusGraph.close();
+        }
         graph.close();
     }
 }

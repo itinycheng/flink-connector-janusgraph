@@ -2,6 +2,9 @@
 
 This project aims to use Flink to operate JanusGraph(Hbase Backend) simply and efficiently.
 
+<font color=red>Using `Map` to store properties will be more flexible than the current
+connector.</font>
+
 ## How To Use
 
 ```SQL

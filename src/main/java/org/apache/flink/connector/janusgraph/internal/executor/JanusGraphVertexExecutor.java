@@ -7,6 +7,7 @@ import org.apache.flink.table.data.RowData;
 
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.janusgraph.core.JanusGraphTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,7 @@ public class JanusGraphVertexExecutor extends JanusGraphExecutor {
     }
 
     @Override
-    public void addToBatch(RowData record) {
+    protected void execute(RowData record, JanusGraphTransaction transaction) {
         Vertex vertex;
         switch (record.getRowKind()) {
             case INSERT:

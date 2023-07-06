@@ -53,7 +53,7 @@ public abstract class JanusGraphExecutor implements Serializable {
 
     protected transient JanusGraphConnection connection;
 
-    protected transient JanusGraphTransaction transaction;
+    private final List<RowData> buffer = new ArrayList<>();
 
     public JanusGraphExecutor(JanusGraphOptions options) {
         checkArgument(options != null && options.getMaxRetries() >= 0);
@@ -71,31 +71,35 @@ public abstract class JanusGraphExecutor implements Serializable {
 
     public void prepareBatch(JanusGraphConnectionProvider connectionProvider) {
         this.connection = connectionProvider.getOrCreateConnection();
-        this.transaction = connection.newTransaction();
     }
 
-    public abstract void addToBatch(RowData rowData) throws Exception;
+    public void addToBatch(RowData rowData) {
+        buffer.add(rowData);
+    }
 
     public void executeBatch() {
-        transaction.commit();
-        transaction.close();
-        transaction = connection.newTransaction();
-    }
-
-    public void close() {
-        if (transaction != null && transaction.isOpen()) {
-            try {
-                transaction.rollback();
-            } finally {
-                transaction.close();
-            }
+        if (buffer.isEmpty()) {
+            return;
         }
 
+        JanusGraphTransaction transaction = connection.newTransaction();
+        for (RowData value : buffer) {
+            execute(value, transaction);
+        }
+
+        transaction.commit();
+        transaction.close();
+        buffer.clear();
+    }
+
+    /** transfer rowData to transaction. */
+    protected abstract void execute(RowData rowData, JanusGraphTransaction transaction);
+
+    public void close() {
         if (connection != null) {
             connection.close();
         }
 
-        transaction = null;
         connection = null;
     }
 

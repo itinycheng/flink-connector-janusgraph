@@ -7,6 +7,7 @@ import org.apache.flink.table.data.RowData;
 
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.janusgraph.core.JanusGraphTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,12 +65,12 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
     }
 
     @Override
-    public void addToBatch(RowData record) {
+    protected void execute(RowData record, JanusGraphTransaction transaction) {
         Object[] values = converter.toExternal(record);
         Edge searched;
         switch (record.getRowKind()) {
             case INSERT:
-                createEdge(values);
+                createEdge(values, transaction);
                 break;
             case UPDATE_AFTER:
                 searched = edgeSearcher.search(values, transaction);
@@ -79,7 +80,7 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
                     if (updateNotFoundStrategy == FAIL) {
                         throw new RuntimeException("Edge not found");
                     } else if (updateNotFoundStrategy == INSERT) {
-                        createEdge(values);
+                        createEdge(values, transaction);
                     } else {
                         LOG.debug("Not found edge: [{}], ignore update it", record);
                     }
@@ -101,7 +102,7 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
         }
     }
 
-    private void createEdge(Object[] values) {
+    private void createEdge(Object[] values, JanusGraphTransaction transaction) {
         Vertex inV = inVertexSearcher.search(values, transaction);
         Vertex outV = outVertexSearcher.search(values, transaction);
         Edge created = outV.addEdge(values[labelIndex].toString(), inV);

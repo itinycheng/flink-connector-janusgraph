@@ -6,6 +6,8 @@ import org.apache.flink.connector.janusgraph.options.JanusGraphOptions;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.RowKind;
 
+import org.janusgraph.core.JanusGraphTransaction;
+
 import javax.annotation.Nonnull;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
@@ -32,17 +34,22 @@ public class JanusGraphVertexUpsertExecutor extends JanusGraphExecutor {
     }
 
     @Override
-    public void addToBatch(RowData record) {
-        if (RowKind.INSERT == record.getRowKind()) {
-            record.setRowKind(RowKind.UPDATE_AFTER);
+    public void addToBatch(RowData rowData) {
+        if (RowKind.INSERT == rowData.getRowKind()) {
+            rowData.setRowKind(RowKind.UPDATE_AFTER);
         }
 
-        executor.addToBatch(record);
+        executor.addToBatch(rowData);
     }
 
     @Override
     public void executeBatch() {
         executor.executeBatch();
+    }
+
+    @Override
+    protected void execute(RowData record, JanusGraphTransaction transaction) {
+        executor.execute(record, transaction);
     }
 
     @Override

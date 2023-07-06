@@ -37,10 +37,12 @@ public class JanusGraphConnection {
     }
 
     public void close() {
-        JanusGraph janusGraph = CACHED_CLIENTS.remove(configuration);
-        if (janusGraph != null) {
-            janusGraph.close();
+        JanusGraph cached = CACHED_CLIENTS.remove(configuration);
+        if (cached != null && cached.isOpen()) {
+            cached.close();
         }
-        graph.close();
+        if (graph != null && graph.isOpen()) {
+            graph.close();
+        }
     }
 }

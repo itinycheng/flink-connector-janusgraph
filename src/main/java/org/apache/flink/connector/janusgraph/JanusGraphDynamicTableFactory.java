@@ -23,6 +23,7 @@ import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptio
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_BATCH_SIZE;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_FLUSH_INTERVAL;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_MAX_RETRIES;
+import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_MODE;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_NON_UPDATE_COLUMNS;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_PARALLELISM;
 import static org.apache.flink.connector.janusgraph.config.JanusGraphConfigOptions.SINK_UPDATE_NOT_FOUND_STRATEGY;
@@ -64,6 +65,7 @@ public class JanusGraphDynamicTableFactory implements DynamicTableSinkFactory {
                 .setPassword(config.get(PASSWORD))
                 .setTableName(config.get(TABLE_NAME))
                 .setTableType(config.get(TABLE_TYPE))
+                .setWriteMode(config.get(SINK_MODE))
                 .setBatchSize(config.get(SINK_BATCH_SIZE))
                 .setFlushInterval(config.get(SINK_FLUSH_INTERVAL))
                 .setMaxRetries(config.get(SINK_MAX_RETRIES))
@@ -95,6 +97,7 @@ public class JanusGraphDynamicTableFactory implements DynamicTableSinkFactory {
         optionalOptions.add(FACTORY);
         optionalOptions.add(USERNAME);
         optionalOptions.add(PASSWORD);
+        optionalOptions.add(SINK_MODE);
         optionalOptions.add(SINK_PARALLELISM);
         optionalOptions.add(SINK_BATCH_SIZE);
         optionalOptions.add(SINK_FLUSH_INTERVAL);

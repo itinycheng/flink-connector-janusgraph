@@ -3,6 +3,7 @@ package org.apache.flink.connector.janusgraph.config;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.connector.janusgraph.options.UpdateNotFoundStrategy;
+import org.apache.flink.connector.janusgraph.options.WriteMode;
 import org.apache.flink.table.factories.FactoryUtil;
 
 import java.time.Duration;
@@ -66,6 +67,13 @@ public class JanusGraphConfigOptions {
                     .withDescription("The type of current table, available: vertex, edge.");
 
     public static final ConfigOption<Integer> SINK_PARALLELISM = FactoryUtil.SINK_PARALLELISM;
+
+    public static final ConfigOption<WriteMode> SINK_MODE =
+            ConfigOptions.key(JanusGraphConfig.SINK_MODE)
+                    .enumType(WriteMode.class)
+                    .defaultValue(WriteMode.APPEND)
+                    .withDescription(
+                            "Write mode for sink, available: append, upsert. The default value is append.");
 
     public static final ConfigOption<Integer> SINK_BATCH_SIZE =
             ConfigOptions.key(JanusGraphConfig.SINK_BATCH_SIZE)

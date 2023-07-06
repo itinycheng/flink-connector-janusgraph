@@ -23,6 +23,8 @@ public class JanusGraphConfig {
 
     public static final String PASSWORD = "password";
 
+    public static final String SINK_MODE = "sink.mode";
+
     public static final String SINK_BATCH_SIZE = "sink.batch-size";
 
     public static final String SINK_FLUSH_INTERVAL = "sink.flush-interval";

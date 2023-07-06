@@ -21,6 +21,8 @@ public class JanusGraphOptions implements Serializable {
     private final String tableName;
     private final TableType tableType;
 
+    private final WriteMode mode;
+
     private final int batchSize;
 
     private final Duration flushInterval;
@@ -42,6 +44,7 @@ public class JanusGraphOptions implements Serializable {
             String password,
             String tableName,
             TableType tableType,
+            WriteMode mode,
             int batchSize,
             Duration flushInterval,
             int maxRetries,
@@ -56,6 +59,7 @@ public class JanusGraphOptions implements Serializable {
         this.password = password;
         this.tableName = tableName;
         this.tableType = tableType;
+        this.mode = mode;
         this.batchSize = batchSize;
         this.flushInterval = flushInterval;
         this.maxRetries = maxRetries;
@@ -94,6 +98,10 @@ public class JanusGraphOptions implements Serializable {
 
     public TableType getTableType() {
         return tableType;
+    }
+
+    public WriteMode getMode() {
+        return mode;
     }
 
     public int getBatchSize() {
@@ -169,6 +177,7 @@ public class JanusGraphOptions implements Serializable {
         private String password;
         private String tableName;
         private TableType tableType;
+        private WriteMode mode;
         private int batchSize;
         private Duration flushInterval;
         private int maxRetries;
@@ -220,6 +229,11 @@ public class JanusGraphOptions implements Serializable {
             return this;
         }
 
+        public Builder setWriteMode(WriteMode mode) {
+            this.mode = mode;
+            return this;
+        }
+
         public Builder setBatchSize(int batchSize) {
             this.batchSize = batchSize;
             return this;
@@ -264,6 +278,7 @@ public class JanusGraphOptions implements Serializable {
                     password,
                     tableName,
                     tableType,
+                    mode,
                     batchSize,
                     flushInterval,
                     maxRetries,

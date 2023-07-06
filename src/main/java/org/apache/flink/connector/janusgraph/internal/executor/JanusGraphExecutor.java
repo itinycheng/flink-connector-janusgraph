@@ -12,6 +12,7 @@ import org.apache.flink.connector.janusgraph.internal.helper.VertexByIdSearcher;
 import org.apache.flink.connector.janusgraph.internal.helper.VertexByPropSearcher;
 import org.apache.flink.connector.janusgraph.options.JanusGraphOptions;
 import org.apache.flink.connector.janusgraph.options.UpdateNotFoundStrategy;
+import org.apache.flink.connector.janusgraph.options.WriteMode;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.LogicalTypeRoot;
@@ -110,28 +111,36 @@ public abstract class JanusGraphExecutor implements Serializable {
         }
     }
 
-    static JanusGraphVertexExecutor createVertexExecutor(
+    static JanusGraphExecutor createVertexExecutor(
             String[] fieldNames, LogicalType[] fieldTypes, JanusGraphOptions options) {
-        return new JanusGraphVertexExecutor(
-                fieldNames,
-                ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL),
-                createVertexSearcher(fieldNames, fieldTypes, KEYWORD_ID),
-                new JanusGraphRowConverter(RowType.of(fieldTypes)),
-                getNonUpdateColumnIndexes(fieldNames, options.getNonUpdateColumns()),
-                options);
+        JanusGraphVertexExecutor executor =
+                new JanusGraphVertexExecutor(
+                        fieldNames,
+                        ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL),
+                        createVertexSearcher(fieldNames, fieldTypes, KEYWORD_ID),
+                        new JanusGraphRowConverter(RowType.of(fieldTypes)),
+                        getNonUpdateColumnIndexes(fieldNames, options.getNonUpdateColumns()),
+                        options);
+        return options.getMode() == WriteMode.UPSERT
+                ? new JanusGraphVertexUpsertExecutor(executor, options)
+                : executor;
     }
 
-    static JanusGraphEdgeExecutor createEdgeExecutor(
+    static JanusGraphExecutor createEdgeExecutor(
             String[] fieldNames, LogicalType[] fieldTypes, JanusGraphOptions options) {
-        return new JanusGraphEdgeExecutor(
-                fieldNames,
-                ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL),
-                createEdgeSearcher(fieldNames, fieldTypes, KEYWORD_ID),
-                createVertexSearcher(fieldNames, fieldTypes, KEYWORD_IN_V),
-                createVertexSearcher(fieldNames, fieldTypes, KEYWORD_OUT_V),
-                new JanusGraphRowConverter(RowType.of(fieldTypes)),
-                getNonUpdateColumnIndexes(fieldNames, options.getNonUpdateColumns()),
-                options);
+        JanusGraphEdgeExecutor executor =
+                new JanusGraphEdgeExecutor(
+                        fieldNames,
+                        ArrayUtils.indexOf(fieldNames, KEYWORD_LABEL),
+                        createEdgeSearcher(fieldNames, fieldTypes, KEYWORD_ID),
+                        createVertexSearcher(fieldNames, fieldTypes, KEYWORD_IN_V),
+                        createVertexSearcher(fieldNames, fieldTypes, KEYWORD_OUT_V),
+                        new JanusGraphRowConverter(RowType.of(fieldTypes)),
+                        getNonUpdateColumnIndexes(fieldNames, options.getNonUpdateColumns()),
+                        options);
+        return options.getMode() == WriteMode.UPSERT
+                ? new JanusGraphEdgeUpsertExecutor(executor, options)
+                : executor;
     }
 
     private static ElementObjectSearcher<Edge> createEdgeSearcher(

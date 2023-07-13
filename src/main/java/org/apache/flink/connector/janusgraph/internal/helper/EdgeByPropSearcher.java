@@ -6,7 +6,6 @@ import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.types.Row;
 
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraphTransaction;
@@ -63,16 +62,14 @@ public class EdgeByPropSearcher implements ElementObjectSearcher<Edge> {
     @Nullable
     @Override
     public Edge search(Object[] rowData, JanusGraphTransaction transaction) {
-        GraphTraversal<Vertex, Object> traversal =
-                transaction
-                        .traversal()
-                        .V()
-                        .where(getVertexTraversal(rowData[outVertexIndex], outVertexFieldNames))
+        GraphTraversal<Vertex, ?> traversal = transaction.traversal().V();
+        traversal =
+                appendVertexTraversal(traversal, rowData[outVertexIndex], outVertexFieldNames)
                         .outE(rowData[edgeLabelIndex].toString())
                         .as("e")
-                        .inV()
-                        .where(getVertexTraversal(rowData[inVertexIndex], inVertexFieldNames))
-                        .select("e");
+                        .inV();
+
+        appendVertexTraversal(traversal, rowData[inVertexIndex], inVertexFieldNames).select("e");
 
         Row edgeIdRow = (Row) rowData[edgeIdIndex];
         if (edgeIdRow != null) {
@@ -93,25 +90,26 @@ public class EdgeByPropSearcher implements ElementObjectSearcher<Edge> {
         return edgeIdIndex;
     }
 
-    private GraphTraversal<Vertex, Vertex> getVertexTraversal(
-            Object vertexData, String[] vertexFieldNames) {
+    private GraphTraversal<Vertex, ?> appendVertexTraversal(
+            GraphTraversal<Vertex, ?> vertexTraversal,
+            Object vertexData,
+            String[] vertexFieldNames) {
         if (vertexData instanceof Number) {
-            return __.V(((Number) vertexData).longValue());
+            return vertexTraversal.hasId(((Number) vertexData).longValue());
         } else {
-            GraphTraversal<Vertex, Vertex> traversal = __.V();
             Row vertexRow = (Row) vertexData;
             for (int i = 0; i < vertexRow.getArity(); i++) {
                 String fieldName = vertexFieldNames[i];
                 Object fieldValue = vertexRow.getField(i);
                 if (fieldValue != null) {
                     if (KEYWORD_LABEL.equals(fieldName)) {
-                        traversal = traversal.hasLabel(fieldValue.toString());
+                        vertexTraversal = vertexTraversal.hasLabel(fieldValue.toString());
                     } else {
-                        traversal = traversal.has(fieldName, fieldValue);
+                        vertexTraversal = vertexTraversal.has(fieldName, fieldValue);
                     }
                 }
             }
-            return traversal;
+            return vertexTraversal;
         }
     }
 }

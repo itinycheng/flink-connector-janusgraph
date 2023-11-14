@@ -105,6 +105,11 @@ public class JanusGraphEdgeExecutor extends JanusGraphExecutor {
     private void createEdge(Object[] values, JanusGraphTransaction transaction) {
         Vertex inV = inVertexSearcher.search(values, transaction);
         Vertex outV = outVertexSearcher.search(values, transaction);
+        if (inV == null || outV == null) {
+            LOG.debug("in vertex: {} and out vertex: {} must be present", inV, outV);
+            return;
+        }
+
         Edge created = outV.addEdge(values[labelIndex].toString(), inV);
         for (int i = 0; i < values.length; i++) {
             if (!nonWriteColumnIndexes.contains(i)) {
